@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\productos;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\ResponseController;
+use App\Http\Controllers\Request\Productos as ProductosRequest;
 
 class ProductosController extends Controller
 {
@@ -12,9 +15,63 @@ class ProductosController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function __construct()
     {
-        //
+        $this->response = new ResponseController();
+    }
+
+    public function index(Request $request)
+    {
+        $page = $request->input('page') ?? 1;
+        $codigo = $request->input('codigo') ?? '';
+        $producto = $request->input('producto') ?? '';
+        $fecha = $request->input('fecha') ?? '';
+
+        $query = productos::query();
+        
+        if (!empty($codigo) && $codigo !="") {
+            
+            $query->where('codigo', $codigo);
+        }
+        
+        if (!empty($producto) && $producto !="") {
+            
+            $query->where('nombre', 'LIKE', "%$producto%");
+        }        
+        
+        if (!empty($fecha) && $fecha !="") {
+            $query->whereDate('created_at', $fecha);
+        }
+        
+        $productos = $query->orderBy('created_at','desc')->paginate(10, ['*'], 'page', $page);
+
+        $nextPageUrl = $productos->nextPageUrl();
+        $previousPageUrl = $productos->previousPageUrl();
+
+        parse_str(parse_url($nextPageUrl, PHP_URL_QUERY), $nextPageQueryParams);
+        parse_str(parse_url($previousPageUrl, PHP_URL_QUERY), $previousPageQueryParams);
+
+        $data = $productos->toArray()["data"] ?? [];
+
+        $n=0;
+        foreach($data as $item)
+        {
+            $created_at = $item["created_at"]??'';
+
+            $fecha = str_replace("/", "-", $created_at);
+            $newDate = date("d-m-Y", strtotime($fecha));		    
+
+            $data[$n]["created_at"] = $newDate;
+            $n++;
+        }
+        
+        return response()->json([
+
+            'data' => $data,
+            'next_page' => isset($nextPageQueryParams['page']) ? $nextPageQueryParams['page'] : null,
+            'previous_page' => isset($previousPageQueryParams['page']) ? $previousPageQueryParams['page'] : null,
+
+        ], 200);
     }
 
     /**
@@ -33,9 +90,42 @@ class ProductosController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ProductosRequest $request)
     {
-        //
+        $codigo = $request->input("codigo") ?? '';
+        $nombre = $request->input("nombre") ?? '';
+        $orden = $request->input("orden") ?? 0;
+        $stock_alerta = $request->input("stock_alerta") ?? 0;
+        $precio_venta = $request->input("precio_venta") ?? 0;
+        $descuento = $request->input("descuento") ?? 0;
+        $destacado = $request->input("destacado") ?? 0;
+        $estados_id = $request->input("estados_id") ?? 0;
+        $unspsc_id = $request->input("unspsc_id") ?? 0;
+        $marcas_id = $request->input("marcas_id") ?? 0;
+        $unidad_id = $request->input("unidad_id") ?? 0;
+        $moneda_id = $request->input("moneda_id") ?? 0;
+        $igv_id = $request->input("igv_id") ?? 0;
+
+        $producto = new Productos();
+
+        $producto->codigo = $codigo;
+        $producto->nombre = $nombre;
+        $producto->orden = $orden;
+        $producto->stock_alerta = $stock_alerta;
+        $producto->	precio_venta = $precio_venta;
+        $producto->descuento = $descuento;
+        $producto->destacado = $destacado;
+        $producto->estados_id = $estados_id;
+        $producto->unspsc_id = $unspsc_id;
+        $producto->marcas_id = $marcas_id;
+        $producto->unidad_id = $unidad_id;
+        $producto->moneda_id = $moneda_id;
+        $producto->igv_id = $igv_id;
+
+        $producto->save();
+
+        return $this->response->success($producto);
+
     }
 
     /**
@@ -44,9 +134,16 @@ class ProductosController extends Controller
      * @param  \App\Models\productos  $productos
      * @return \Illuminate\Http\Response
      */
-    public function show(productos $productos)
+    public function show($id)
     {
-        //
+        $producto = Productos::find($id);
+
+        if($producto){
+            
+            return $this->response->success($producto, "El registro fue encontrado");
+        }else{
+            return $this->response->error("El registro no fue encontrado");
+        }
     }
 
     /**
@@ -67,9 +164,45 @@ class ProductosController extends Controller
      * @param  \App\Models\productos  $productos
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, productos $productos)
+    public function update(ProductosRequest $request, $id)
     {
-        //
+        $producto = Productos::find($id);
+
+        if(empty($producto)){
+            return $this->response->error("No se envio un id valido");
+        }
+
+        $codigo = $request->input("codigo") ?? '';
+        $nombre = $request->input("nombre") ?? '';
+        $orden = $request->input("orden") ?? 0;
+        $stock_alerta = $request->input("stock_alerta") ?? 0;
+        $precio_venta = $request->input("precio_venta") ?? 0;
+        $descuento = $request->input("descuento") ?? 0;
+        $destacado = $request->input("destacado") ?? 0;
+        $estados_id = $request->input("estados_id") ?? 0;
+        $unspsc_id = $request->input("unspsc_id") ?? 0;
+        $marcas_id = $request->input("marcas_id") ?? 0;
+        $unidad_id = $request->input("unidad_id") ?? 0;
+        $moneda_id = $request->input("moneda_id") ?? 0;
+        $igv_id = $request->input("igv_id") ?? 0;
+
+        $producto->codigo = $codigo;
+        $producto->nombre = $nombre;
+        $producto->orden = $orden;
+        $producto->stock_alerta = $stock_alerta;
+        $producto->	precio_venta = $precio_venta;
+        $producto->descuento = $descuento;
+        $producto->destacado = $destacado;
+        $producto->estados_id = $estados_id;
+        $producto->unspsc_id = $unspsc_id;
+        $producto->marcas_id = $marcas_id;
+        $producto->unidad_id = $unidad_id;
+        $producto->moneda_id = $moneda_id;
+        $producto->igv_id = $igv_id;
+
+        $producto->save();
+
+        return $this->response->success($producto, "El registro fue actualizado correctamente");
     }
 
     /**
@@ -78,8 +211,21 @@ class ProductosController extends Controller
      * @param  \App\Models\productos  $productos
      * @return \Illuminate\Http\Response
      */
-    public function destroy(productos $productos)
+    public function destroy($id)
     {
-        //
+        $producto = Productos::find($id);
+
+        if(empty($producto)){
+            return $this->response->error("No se envio un id valido");
+        }
+
+        $auth_tipo = Auth::user()->usuario_tipo;
+        if($auth_tipo !=  1 && $auth_tipo != 2){
+            return $this->response->error("El usuario no esta autorizado para realizar esta accion");
+        }
+
+        $producto->delete();
+
+        return $this->response->success($producto, "El registro fue eliminado correctamente");
     }
 }
