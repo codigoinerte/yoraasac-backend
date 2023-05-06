@@ -126,8 +126,8 @@ class StockHeladosController extends Controller
         $idStock = $stock->id;
 
         /* añadir codigo */
-        $codigo = str_pad($idStock, 10, "0", STR_PAD_LEFT);        
-        $stock->codigo_movimiento = $codigo;
+        $codigo = str_pad($idStock, 7, "0", STR_PAD_LEFT);        
+        $stock->codigo_movimiento = "sth-".$codigo;
 
         $stock->save();     
         /* añadir codigo */
