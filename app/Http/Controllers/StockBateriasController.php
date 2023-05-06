@@ -123,6 +123,16 @@ class StockBateriasController extends Controller
         
         $stock->save();
 
+
+        $idStock = $stock->id;
+
+        /* añadir codigo */
+        $codigo = str_pad($idStock, 7, "0", STR_PAD_LEFT);        
+        $stock->codigo_movimiento = "stb-".$codigo;
+
+        $stock->save();     
+        /* añadir codigo */
+
         return $this->response->success($stock);
     }
 
