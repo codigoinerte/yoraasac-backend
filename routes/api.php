@@ -19,7 +19,13 @@ use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProvinciaController;
 use Illuminate\Validation\ValidationException;
+use App\Http\Controllers\MovimientosController;
 use App\Http\Controllers\DepartamentoController;
+use App\Http\Controllers\StockHeladosController;
+use App\Http\Controllers\StockBateriasController;
+use App\Http\Controllers\TipoDocumentoController;
+use App\Http\Controllers\BuscarProductoController;
+use App\Http\Controllers\StockBarquillosController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,9 +46,19 @@ use App\Http\Controllers\DepartamentoController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
+    
+
+    Route::resource('buscar-producto', BuscarProductoController::class);
+
     Route::resource('persona', PersonasController::class);
 
     Route::resource('producto', ProductosController::class);
+
+    Route::resource('stock-helado', StockHeladosController::class);
+
+    Route::resource('stock-bateria', StockBateriasController::class);
+
+    Route::resource('stock-barquillos', StockBarquillosController::class);
 
     Route::resource('unspsc', UnspscController::class);
     Route::resource('estado', EstadosController::class);
@@ -50,6 +66,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('unidad', UnidadController::class);
     Route::resource('moneda', MonedaController::class);
     Route::resource('igv', IgvController::class);
+    Route::resource('movimiento', MovimientosController::class);
+    Route::resource('tipo-documento',TipoDocumentoController::class);
     
     Route::get('/pais',[ PaisController::class, 'index']);
 
