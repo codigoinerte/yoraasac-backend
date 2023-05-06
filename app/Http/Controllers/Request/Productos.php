@@ -15,7 +15,7 @@ class Productos extends FormRequest
         return [
 
             'codigo' => 'required',            
-            'nombres' => 'required',
+            'nombre' => 'required',
             'precio_venta' => 'required',
             'estados_id'=> 'required|integer|exists:estados,id',            
             'unidad_id'=> 'required|integer|exists:unidad,id',
