@@ -15,15 +15,26 @@ class UnspscController extends Controller
     public function index(Request $request)
     {
         $buscar = $request->input("buscar")??'';
+        $type = $request->input("type")??'';
 
         $data = [];
 
         if($buscar != '')
         {
-            $data = Unspsc::query()
-                            ->where('descripcion', 'LIKE', "%$buscar%")
-                            ->orderBy('descripcion','desc')
-                            ->get();
+            $query = Unspsc::query();
+
+            if($type == 'codigo')
+            {
+                $query->Where('id', 'LIKE', "%$buscar%");
+
+            }
+            else
+            {
+                $query->where('descripcion', 'LIKE', "%$buscar%");
+            }
+            $query->orderBy('descripcion','desc');
+
+            $data = $query->get();
                 
         }
 
