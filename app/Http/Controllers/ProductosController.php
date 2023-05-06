@@ -27,23 +27,45 @@ class ProductosController extends Controller
         $producto = $request->input('producto') ?? '';
         $fecha = $request->input('fecha') ?? '';
 
-        $query = productos::query();
+        $query = productos::query()
+                ->leftJoin('estados', 'productos.estados_id', '=', 'estados.id')
+                ->leftJoin('moneda', 'productos.moneda_id', '=', 'moneda.id')
+                ->select(
+                            "productos.id",
+                            "productos.codigo",
+                            "productos.nombre",
+                            "productos.orden",
+                            "productos.stock_alerta",
+                            "productos.precio_venta",
+                            "productos.descuento",
+                            "productos.destacado",
+                            "productos.estados_id",
+                            "productos.unspsc_id",
+                            "productos.marcas_id",
+                            "productos.unidad_id",
+                            "productos.moneda_id",
+                            "productos.igv_id",
+                            "estados.estado",
+                            "moneda.moneda",
+                            "productos.created_at",
+                            "productos.updated_at",
+        )               ;
         
         if (!empty($codigo) && $codigo !="") {
             
-            $query->where('codigo', $codigo);
+            $query->where('productos.codigo', $codigo);
         }
         
         if (!empty($producto) && $producto !="") {
             
-            $query->where('nombre', 'LIKE', "%$producto%");
+            $query->where('productos.nombre', 'LIKE', "%$producto%");
         }        
         
         if (!empty($fecha) && $fecha !="") {
-            $query->whereDate('created_at', $fecha);
+            $query->whereDate('productos.created_at', $fecha);
         }
         
-        $productos = $query->orderBy('created_at','desc')->paginate(10, ['*'], 'page', $page);
+        $productos = $query->orderBy('productos.created_at','desc')->paginate(10, ['*'], 'page', $page);
 
         $nextPageUrl = $productos->nextPageUrl();
         $previousPageUrl = $productos->previousPageUrl();
