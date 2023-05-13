@@ -22,10 +22,12 @@ use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\MovimientosController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\StockHeladosController;
+use App\Http\Controllers\BuscarUsuarioController;
 use App\Http\Controllers\StockBateriasController;
 use App\Http\Controllers\TipoDocumentoController;
 use App\Http\Controllers\BuscarProductoController;
 use App\Http\Controllers\StockBarquillosController;
+use App\Http\Controllers\NotaHeladeroEstadoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +50,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     
 
+    Route::resource('notas-estado', NotaHeladeroEstadoController::class);
+
+    Route::resource('buscar-usuario', BuscarUsuarioController::class);
+     
     Route::resource('buscar-producto', BuscarProductoController::class);
 
     Route::resource('persona', PersonasController::class);
