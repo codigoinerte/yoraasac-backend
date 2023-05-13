@@ -104,7 +104,7 @@ class StockBateriasController extends Controller
      */
     public function store(StockBateriasRequest $request)
     {
-        $movimiento_id = $request->input("movimiento_id") ?? 0;
+        $movimiento_id = $request->input("movimientos_id") ?? 0;
         $tipo_documento_id = $request->input("tipo_documento_id") ?? 0;
         $cantidad = $request->input("cantidad") ?? 0;
         $fecha_movimiento = $request->input("fecha_movimiento") ?? '';
@@ -180,7 +180,7 @@ class StockBateriasController extends Controller
             return $this->response->error("No se envio un id valido");
         }
 
-        $movimiento_id = $request->input("movimiento_id") ?? 0;
+        $movimiento_id = $request->input("movimientos_id") ?? 0;
         $tipo_documento_id = $request->input("tipo_documento_id") ?? 0;
         $cantidad = $request->input("cantidad") ?? 0;
         $fecha_movimiento = $request->input("fecha_movimiento") ?? '';
