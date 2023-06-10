@@ -23,6 +23,7 @@ class BuscarUsuarioController extends Controller
     {
         $buscar = $request->input('buscar') ?? '';
         $tipo = $request->input('tipo') ?? '7';
+        $type = $request->input("type") ?? '';
 
         if($buscar == ""){
             return $this->response->success($buscar, "No se envio un nombre valido");
@@ -30,13 +31,21 @@ class BuscarUsuarioController extends Controller
 
         $buscar = strtolower($buscar);
 
-        $usuario = User::query()
-                    ->where('usuario_tipo', "$tipo")
-                    ->orWhere('name', 'LIKE', "%$buscar%")
-                    ->orWhere('apellidos', 'LIKE', "%$buscar%")
-                    ->orWhere('documento', 'LIKE', "%$buscar%")
-                    ->orderBy('created_at','desc')
-                    ->get();
+        if($type == 'codigo')
+        {
+            $usuario = User::query()
+                        ->Where('id', 'LIKE', "%$buscar%")
+                        ->orderBy('created_at','desc')
+                        ->get();
+
+        }
+        else
+        {
+            $usuario = User::query()
+                        ->whereRaw('usuario_tipo = ? AND (name LIKE ? OR apellidos LIKE ? OR documento LIKE ?) ', [$tipo, "%$buscar%", "%$buscar%", "%$buscar%"])
+                        ->orderBy('created_at','desc')
+                        ->get();
+        }
 
         return response()->json([
 
