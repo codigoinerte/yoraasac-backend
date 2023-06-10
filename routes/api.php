@@ -21,6 +21,7 @@ use App\Http\Controllers\ProvinciaController;
 use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\MovimientosController;
 use App\Http\Controllers\DepartamentoController;
+use App\Http\Controllers\NotaHeladeroController;
 use App\Http\Controllers\StockHeladosController;
 use App\Http\Controllers\BuscarUsuarioController;
 use App\Http\Controllers\StockBateriasController;
@@ -48,7 +49,12 @@ use App\Http\Controllers\NotaHeladeroEstadoController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
+
+    Route::get('nota-heladero-productos', [NotaHeladeroController::class, 'listPublicProducts']);
+
+    Route::get('nota-heladero-buscar', [NotaHeladeroController::class, 'findNotaGuardada']);
     
+    Route::resource('nota-heladero', NotaHeladeroController::class);
 
     Route::resource('notas-estado', NotaHeladeroEstadoController::class);
 
