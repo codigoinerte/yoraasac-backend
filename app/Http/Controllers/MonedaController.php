@@ -88,4 +88,13 @@ class MonedaController extends Controller
     {
         //
     }
+
+    public function getMonedaPrincipal()
+    {
+        $moneda = Moneda::query()
+                    ->where("principal", "=", 1)
+                    ->first();
+        
+        return $moneda;
+    }
 }
