@@ -13,6 +13,7 @@ use App\Http\Controllers\MonedaController;
 use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\UnspscController;
 use App\Http\Controllers\EstadosController;
+use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\DistritoController;
 use App\Http\Controllers\PersonasController;
 use App\Http\Controllers\Api\LoginController;
@@ -24,11 +25,13 @@ use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\NotaHeladeroController;
 use App\Http\Controllers\StockHeladosController;
 use App\Http\Controllers\BuscarUsuarioController;
+use App\Http\Controllers\FacturaEstadoController;
 use App\Http\Controllers\StockBateriasController;
 use App\Http\Controllers\TipoDocumentoController;
 use App\Http\Controllers\BuscarProductoController;
 use App\Http\Controllers\StockBarquillosController;
 use App\Http\Controllers\NotaHeladeroEstadoController;
+use App\Http\Controllers\SucursalesDocumentosSerieController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +57,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('nota-heladero-buscar', [NotaHeladeroController::class, 'findNotaGuardada']);
     
+    Route::resource('factura', FacturaController::class);
+
     Route::resource('nota-heladero', NotaHeladeroController::class);
 
     Route::resource('notas-estado', NotaHeladeroEstadoController::class);
@@ -74,6 +79,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::resource('unspsc', UnspscController::class);
     Route::resource('estado', EstadosController::class);
+    Route::resource('estado-factura', FacturaEstadoController::class);
     Route::resource('marca', MarcasController::class);
     Route::resource('unidad', UnidadController::class);
     Route::resource('moneda', MonedaController::class);
