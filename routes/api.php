@@ -86,6 +86,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('igv', IgvController::class);
     Route::resource('movimiento', MovimientosController::class);
     Route::resource('tipo-documento',TipoDocumentoController::class);
+    Route::get('doc-series', [SucursalesDocumentosSerieController::class, 'index']);
     
     Route::get('/pais',[ PaisController::class, 'index']);
 
