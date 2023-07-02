@@ -26,13 +26,15 @@ class FacturaController extends Controller
         $page = $request->input('page') ?? 1;
 
         $documento = $request->input('documento') ?? '';
-        $nombres = $request->input('nombres') ?? '';
+        $nombres = $request->input('nombre') ?? '';
         $fecha = $request->input('fecha') ?? '';
 
         $query = Factura::query()
-                    ->leftJoin('users as heladero', 'facturas.user_id', '=', 'heladero.id')
+                    ->leftJoin('factura_detalle', 'facturas.id', '=', 'factura_detalle.facturas_id')
+                    ->leftJoin('users as usuario', 'facturas.user_id', '=', 'usuario.id')
                     ->leftJoin('moneda', 'facturas.id_moneda', '=', 'moneda.id')
                     ->leftJoin('factura_estados as festado', 'facturas.id_estado', '=', 'festado.id')
+                    ->leftJoin('tipo_documentos as nomdoc', 'facturas.tipo', '=', 'nomdoc.id')                    
                     ->select(
 
                         "facturas.id",
@@ -51,26 +53,33 @@ class FacturaController extends Controller
                         "facturas.id_estado",
                         "facturas.id_moneda",
                         
-                        "heladero.documento as heladero_documento",
-                        "heladero.name as heladero_nombre",
-                        "festado.estado as estado"
-                    );
-
+                        "usuario.documento as usuario_documento",
+                        "usuario.name as usuario_nombre",
+                        "festado.estado as estado",
+                        "nomdoc.documento as documento",
+                        "moneda.moneda as moneda"
+                    )                    
+                    ->selectRaw('SUM(factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))) as total');
+                    
+            
         if (!empty($documento) && $documento !="") {
             
-            $query->where("CONCAT(facturas.codigo,' ',facturas.serie)", "LIKE", $documento);
+            $query->whereRaw("CONCAT(facturas.serie,'-',facturas.correlativo) = ? ", [$documento]);
         }
 
         if (!empty($nombres) && $nombres !="") {
             
-            $query->where('heladero.name', 'LIKE', "%$nombres%");
+            $query->where('usuario.name', 'LIKE', "%$nombres%");
         }                
         
         if (!empty($fecha) && $fecha !="") {
             $query->whereDate('facturas.created_at', $fecha);
         }
         
-        $users = $query->orderBy('facturas.created_at','desc')->paginate(10, ['*'], 'page', $page);
+        $users = $query
+                    ->orderBy('facturas.created_at','desc')
+                    ->groupBy('facturas.id')
+                    ->paginate(10, ['*'], 'page', $page);
 
         $nextPageUrl = $users->nextPageUrl();
         $previousPageUrl = $users->previousPageUrl();
@@ -203,7 +212,7 @@ class FacturaController extends Controller
 
         if($nota_heladero)
         {
-            $detalle = NotaHeladeroDetalle::query()                                
+            $detalle = FacturaDetalle::query()                                
                                 ->leftJoin('productos',  'productos.codigo', '=', 'factura_detalle.codigo')
                                 ->select(
                                     "factura_detalle.id",
@@ -220,7 +229,7 @@ class FacturaController extends Controller
                                 ->where('factura_detalle.facturas_id', $id)
                                 ->orderBy('factura_detalle.created_at','desc')
                                 ->get();
-
+            
             $nota_heladero["detalle"] = $detalle;
 
             return $this->response->success($nota_heladero, "El registro fue encontrado");
@@ -266,7 +275,7 @@ class FacturaController extends Controller
         $productos = $request->input("productos")??[];
 
         $factura->user_id         = $cliente;
-        $factura->tipo            = $tipo;
+        #$factura->tipo            = $tipo;
         $factura->fecha_pago      = $fecha_pago;
         $factura->fecha_emision   = $fecha_emision;
         $factura->tipo_transaccion= $tipo_transaccion;
@@ -283,7 +292,7 @@ class FacturaController extends Controller
 
         $array_id_eliminar = [];
 
-        if(count($factura_actuales) > 0 && count($productos) > 0)
+        if(count($factura_actuales) > 0)
         {
             
             foreach($productos as $ritem){
@@ -301,7 +310,7 @@ class FacturaController extends Controller
                 }
 
             }
-
+            
             if(count($factura_actuales)){
 
                 foreach($factura_actuales as $eitem){
@@ -316,47 +325,6 @@ class FacturaController extends Controller
             }
         }
 
-        /*
-        $array_sin_id  = $array_con_id = [];
-
-        if(count($productos) > 0)
-        {
-            foreach($productos as $key => $item) 
-            {
-                $id = $item["id"]??0;
-
-                if($id == 0)
-                {
-                    array_push($array_sin_id, $productos[$key]);
-                }
-                else
-                {
-                    array_push($array_con_id, $productos[$key]);
-                }
-            }
-
-            if(count($array_sin_id) > 0 && count($array_con_id))
-            {
-                foreach($array_con_id as $mkey => $citem)
-                {
-                    $ccodigo = $citem["codigo"]??'';
-                    $ccantidad = $citem["cantidad"]??0;
-
-                    foreach($array_sin_id as $skey => $sitem){
-                        $scodigo = $sitem["codigo"]??'';
-                        $scantidad = $sitem["cantidad"]??0;
-
-                        if($ccodigo == $scodigo)
-                        {
-                            $array_con_id[$mkey]["cantidad"] = $array_con_id[$mkey]["cantidad"] + $scantidad;
-
-                            unset($array_sin_id[$skey]);
-                        }
-                    }
-                }
-            }
-        }
-        */
         if(count($productos) > 0)
         {
             foreach($productos as $item)
@@ -436,5 +404,9 @@ class FacturaController extends Controller
         $factura->delete();
 
         return $this->response->success($factura, "El registro fue eliminado correctamente");
+    }
+
+    public function getSeriesDoc() {
+        
     }
 }
