@@ -14,7 +14,7 @@ class FacturaRequest extends FormRequest
             'user_id' => 'required|exists:users,id',
             'estado'=> 'required|integer|exists:factura_estados,id',            
             'fecha_emision' => 'required|date',
-            'productos' => 'required|array'
+            //'productos' => 'required|array'
         ];
     }
     public function failedValidation(Validator $validator)
