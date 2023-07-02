@@ -11,25 +11,36 @@ class SucursalesDocumentosSerieController extends Controller
     public function __construct(){
         $this->response = new ResponseController();
     }
-    public function get_document($tipo, $sucursal){
+    public function index(Request $request){
+
+        $tipo = $request->input("tipo") ??'';
+        $sucursal = $request->input("sucursal") ??'';
+
+        if($tipo == "" || $sucursal == ""){
+            return $this->response->error("Faltan algunos parametros");
+        }
 
         $series = sucursalesDocumentosSerie::query()
         ->where("idsucursal",'=', $sucursal)
         ->where("tipo", '=', $tipo)
         ->where("estado", '=', 1)
         ->where("principal", '=', 1)
-        ->get();
-
+        ->get()
+        ->toArray();
+        
         if(empty($series)){
             return null;
         }
+
+        $serie = $series[0]["serie"]??'';
+        $correlativo = $series[0]["correlativo"]??'';
 
         $return = [
             "serie"=> $serie,
             "correlativo"=> $correlativo,
         ];
 
-        return $this->response->success($return);
+        return response()->json($return, 200);
     }
     public function generate_next_document($tipo = 0, $sucursal = 0){
 
