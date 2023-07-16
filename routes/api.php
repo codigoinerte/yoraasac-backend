@@ -53,6 +53,12 @@ use App\Http\Controllers\SucursalesDocumentosSerieController;
 Route::middleware(['auth:sanctum'])->group(function () {
 
 
+    Route::post('guardar-foto', [PersonasController::class, 'uploadImage']);
+
+    Route::delete('eliminar-foto', [PersonasController::class, 'deleteImage']);
+
+    Route::post('eliminar-foto-persona/{id}', [PersonasController::class, 'updateDeleteImagen']);
+
     Route::get('nota-heladero-productos', [NotaHeladeroController::class, 'listPublicProducts']);
 
     Route::get('nota-heladero-buscar', [NotaHeladeroController::class, 'findNotaGuardada']);

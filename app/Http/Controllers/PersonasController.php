@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Requests\uploadImage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Intervention\Image\Facades\Image;
 use App\Http\Controllers\Request\Personas;
 use App\Http\Controllers\ResponseController;
 
@@ -128,6 +130,9 @@ class PersonasController extends Controller
         $password = $request->input("password") ?? '';
         $usuario_tipo = $request->input("usuario_tipo") ?? 0;
 
+        $foto_frontal = $request->input("foto_frontal");
+        $foto_posterior = $request->input("foto_posterior");
+
         $persona = new User();
 
         $persona->documento = $documento;
@@ -143,6 +148,9 @@ class PersonasController extends Controller
         $persona->celular = $celular;
         $persona->direccion = $direccion;
         $persona->usuario_tipo = $usuario_tipo;
+
+        if($foto_frontal !='' ) $persona->foto_frontal = $foto_frontal;
+        if($foto_posterior!='') $persona->foto_posterior = $foto_posterior;
 
         $persona->save();
 
@@ -207,6 +215,9 @@ class PersonasController extends Controller
         $password = $request->input("password") ?? '';
         $usuario_tipo = $request->input("usuario_tipo") ?? 0;
 
+        $foto_frontal = $request->input("foto_frontal");
+        $foto_posterior = $request->input("foto_posterior");
+
         $persona->documento = $documento;
         $persona->documento_tipo = $documento_tipo;
         $persona->name = $nombres;
@@ -215,6 +226,10 @@ class PersonasController extends Controller
         $persona->iddepartamento = $departamento;
         $persona->idprovincia = $provincia;
         $persona->iddistrito = $distrito;
+
+        if($foto_frontal !='' ) $persona->foto_frontal = $foto_frontal;
+        if($foto_posterior!='') $persona->foto_posterior = $foto_posterior;
+
         $persona->email = ($usuario_tipo == 1 || $usuario_tipo == 2 || $usuario_tipo == 3 )? $email : null;
 
         if(($usuario_tipo == 1 || $usuario_tipo == 2 || $usuario_tipo == 3) && $password !="" ){
@@ -225,6 +240,48 @@ class PersonasController extends Controller
         $persona->celular = $celular;
         $persona->direccion = $direccion;
         $persona->usuario_tipo = $usuario_tipo;
+
+        $persona->save();
+
+        return $this->response->success($persona, "El registro fue actualizado correctamente");
+    }
+
+    public function updateDeleteImagen(Request $request, $id)
+    {
+        $persona = User::find($id);
+
+        if(empty($persona)){
+            return $this->response->error("No se envio un id valido");
+        }
+
+        $foto_frontal = $request->input("foto_frontal");
+        
+        $foto_posterior = $request->input("foto_posterior");
+
+        if($foto_frontal !='' && $persona->foto_frontal == $foto_frontal){
+
+            $respuesta = $this->deleteImage($foto_frontal);
+
+            if($respuesta == false)
+            {
+                return $this->response->error("La foto enviada no existe");
+            }
+
+            $persona->foto_frontal = "";
+
+        };
+
+        if($foto_posterior!=''  && $persona->foto_posterior == $foto_posterior) {
+
+            $respuesta = $this->deleteImage($foto_posterior);
+
+            if($respuesta == false)
+            {
+                return $this->response->error("La foto enviada no existe");
+            }
+
+            $persona->foto_posterior = "";
+        };
 
         $persona->save();
 
@@ -253,5 +310,78 @@ class PersonasController extends Controller
         $persona->delete();
 
         return $this->response->success($persona, "El registro fue eliminado correctamente");
+    }
+
+    public function uploadImage(uploadImage $request)
+    {        
+        $fotoArray = $request->file('foto');
+        
+        $fotoNombreArray = [];     
+        
+        for($key = 0; $key<count($fotoArray); $key++)
+        {
+            $foto = $fotoArray[$key]??'';
+            
+            if($foto == '' || $foto==null){
+                array_push($fotoNombreArray, '');                
+            }
+            else
+            {
+
+                $name = (time() + $key).'.'.$foto->getClientOriginalExtension();
+                
+                $destinationPath = public_path('/fotos');
+        
+                $data = getimagesize($foto);
+                
+                $width = $data[0]??0;
+                
+                $height = $data[1]??0;
+        
+                $tamanioMaximo = 3 * 1024 * 1024;
+        
+                $foto = Image::make($foto)->encode('jpg', 75);
+                
+                $ruta = storage_path('app/public/fotos').'/'.$name;
+                
+                $anchoMaximo = 1000;
+        
+                $altoMaximo = 1000;
+                
+                if ($width > $anchoMaximo || $height > $altoMaximo) {
+        
+                    $foto->resize($anchoMaximo, $altoMaximo, function ($constraint) {
+                        $constraint->aspectRatio();
+                    });
+        
+                }
+                
+                $foto->save($ruta);
+    
+                array_push($fotoNombreArray, $name);             
+    
+                unset($foto, $name);            
+            }
+            
+        }
+
+
+        return response()->json(['ruta' => $fotoNombreArray], 200);        
+    }
+
+    public function deleteImage($imagen = ""){
+        
+        $imagen = request()->input("imagen") ?? $imagen;
+
+        if($imagen == '') return false;
+        
+        $image_path = storage_path('app/public/fotos/').$imagen;
+        
+        if(\File::exists($image_path)){
+            \File::delete($image_path);
+            return true;
+          }else{
+            return false;
+          }
     }
 }
