@@ -13,8 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('igvs', function (Blueprint $table) {
+        Schema::create('stock_baterias', function (Blueprint $table) {
             $table->id();
+            $table->string("codigo_movimiento");
+            $table->integer("movimientos_id");
+            $table->integer("tipo_documento_id");
+            $table->integer("cantidad");
+            $table->string("numero_documento")->nullable();
+            $table->date("fecha_movimiento")->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('igvs');
+        Schema::dropIfExists('stock_baterias');
     }
 };

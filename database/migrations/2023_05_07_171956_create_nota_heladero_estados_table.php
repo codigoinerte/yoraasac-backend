@@ -13,8 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('monedas', function (Blueprint $table) {
+        Schema::create('nota_heladero_estados', function (Blueprint $table) {
             $table->id();
+            $table->string("nombre");
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('monedas');
+        Schema::dropIfExists('nota_heladero_estados');
     }
 };

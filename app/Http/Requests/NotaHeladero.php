@@ -1,30 +1,24 @@
 <?php
 
-namespace App\Http\Controllers\Request;
+namespace App\Http\Requests;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class Productos extends FormRequest
+class NotaHeladero extends FormRequest
 {
     public function rules(Request $request)
     {
         return [
-
-            'codigo' => 'required',            
-            'nombre' => 'required',
-            'precio_venta' => 'required',
-            'estados_id'=> 'required|integer|exists:estados,id',            
-            'unidad_id'=> 'required|integer|exists:unidad,id',
-            'moneda_id'=> 'required|integer|exists:moneda,id',
-            'igv_id'=> 'required|integer|exists:igv,id'
-            
+            'user_id' => 'required|exists:users,id',
+            'estado'=> 'required|integer|exists:nota_heladero_estados,id',
+            'id_sucursal'=> 'required|integer',
+            'fecha_operacion' => 'required|date',
+            'productos' => 'required|array'
         ];
     }
-
     public function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([

@@ -13,13 +13,25 @@ use App\Http\Controllers\MonedaController;
 use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\UnspscController;
 use App\Http\Controllers\EstadosController;
+use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\DistritoController;
 use App\Http\Controllers\PersonasController;
 use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProvinciaController;
 use Illuminate\Validation\ValidationException;
+use App\Http\Controllers\MovimientosController;
 use App\Http\Controllers\DepartamentoController;
+use App\Http\Controllers\NotaHeladeroController;
+use App\Http\Controllers\StockHeladosController;
+use App\Http\Controllers\BuscarUsuarioController;
+use App\Http\Controllers\FacturaEstadoController;
+use App\Http\Controllers\StockBateriasController;
+use App\Http\Controllers\TipoDocumentoController;
+use App\Http\Controllers\BuscarProductoController;
+use App\Http\Controllers\StockBarquillosController;
+use App\Http\Controllers\NotaHeladeroEstadoController;
+use App\Http\Controllers\SucursalesDocumentosSerieController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,16 +52,47 @@ use App\Http\Controllers\DepartamentoController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
+
+    Route::post('guardar-foto', [PersonasController::class, 'uploadImage']);
+
+    Route::delete('eliminar-foto', [PersonasController::class, 'deleteImage']);
+
+    Route::post('eliminar-foto-persona/{id}', [PersonasController::class, 'updateDeleteImagen']);
+
+    Route::get('nota-heladero-productos', [NotaHeladeroController::class, 'listPublicProducts']);
+
+    Route::get('nota-heladero-buscar', [NotaHeladeroController::class, 'findNotaGuardada']);
+    
+    Route::resource('factura', FacturaController::class);
+
+    Route::resource('nota-heladero', NotaHeladeroController::class);
+
+    Route::resource('notas-estado', NotaHeladeroEstadoController::class);
+
+    Route::resource('buscar-usuario', BuscarUsuarioController::class);
+     
+    Route::resource('buscar-producto', BuscarProductoController::class);
+
     Route::resource('persona', PersonasController::class);
 
     Route::resource('producto', ProductosController::class);
 
+    Route::resource('stock-helado', StockHeladosController::class);
+
+    Route::resource('stock-bateria', StockBateriasController::class);
+
+    Route::resource('stock-barquillos', StockBarquillosController::class);
+
     Route::resource('unspsc', UnspscController::class);
     Route::resource('estado', EstadosController::class);
+    Route::resource('estado-factura', FacturaEstadoController::class);
     Route::resource('marca', MarcasController::class);
     Route::resource('unidad', UnidadController::class);
     Route::resource('moneda', MonedaController::class);
     Route::resource('igv', IgvController::class);
+    Route::resource('movimiento', MovimientosController::class);
+    Route::resource('tipo-documento',TipoDocumentoController::class);
+    Route::get('doc-series', [SucursalesDocumentosSerieController::class, 'index']);
     
     Route::get('/pais',[ PaisController::class, 'index']);
 

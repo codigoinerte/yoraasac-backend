@@ -13,8 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('unspscs', function (Blueprint $table) {
+        Schema::create('stock_helados', function (Blueprint $table) {
             $table->id();
+            $table->string("codigo_movimiento");
+            $table->integer("movimientos_id");
+            $table->integer("tipo_documento_id");
+            $table->string("numero_documento")->nullable();
+            $table->date("fecha_movimiento")->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('unspscs');
+        Schema::dropIfExists('stock_helados');
     }
 };

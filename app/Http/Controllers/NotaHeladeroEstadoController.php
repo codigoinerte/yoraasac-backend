@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Unspsc;
+use App\Models\NotaHeladeroEstado;
 use Illuminate\Http\Request;
 
-class UnspscController extends Controller
+class NotaHeladeroEstadoController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,33 +14,11 @@ class UnspscController extends Controller
      */
     public function index(Request $request)
     {
-        $buscar = $request->input("buscar")??'';
-        $type = $request->input("type")??'';
-
-        $data = [];
-
-        if($buscar != '')
-        {
-            $query = Unspsc::query();
-
-            if($type == 'codigo')
-            {
-                $query->Where('id', 'LIKE', "%$buscar%");
-
-            }
-            else
-            {
-                $query->where('descripcion', 'LIKE', "%$buscar%");
-            }
-            $query->orderBy('descripcion','desc');
-
-            $data = $query->get();
-                
-        }
+        $estado = NotaHeladeroEstado::all();
 
         return response()->json([
 
-            'data' => $data
+        'data' => $estado
 
         ], 200);
     }
@@ -69,10 +47,10 @@ class UnspscController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Unspsc  $unspsc
+     * @param  \App\Models\NotaHeladeroEstado  $notaHeladeroEstado
      * @return \Illuminate\Http\Response
      */
-    public function show(Unspsc $unspsc)
+    public function show(NotaHeladeroEstado $notaHeladeroEstado)
     {
         //
     }
@@ -80,10 +58,10 @@ class UnspscController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Unspsc  $unspsc
+     * @param  \App\Models\NotaHeladeroEstado  $notaHeladeroEstado
      * @return \Illuminate\Http\Response
      */
-    public function edit(Unspsc $unspsc)
+    public function edit(NotaHeladeroEstado $notaHeladeroEstado)
     {
         //
     }
@@ -92,10 +70,10 @@ class UnspscController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Unspsc  $unspsc
+     * @param  \App\Models\NotaHeladeroEstado  $notaHeladeroEstado
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Unspsc $unspsc)
+    public function update(Request $request, NotaHeladeroEstado $notaHeladeroEstado)
     {
         //
     }
@@ -103,10 +81,10 @@ class UnspscController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Unspsc  $unspsc
+     * @param  \App\Models\NotaHeladeroEstado  $notaHeladeroEstado
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Unspsc $unspsc)
+    public function destroy(NotaHeladeroEstado $notaHeladeroEstado)
     {
         //
     }

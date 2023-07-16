@@ -3,25 +3,17 @@
 namespace App\Http\Controllers\Request;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class Productos extends FormRequest
+class StockHelados extends FormRequest
 {
     public function rules(Request $request)
     {
         return [
-
-            'codigo' => 'required',            
-            'nombre' => 'required',
-            'precio_venta' => 'required',
-            'estados_id'=> 'required|integer|exists:estados,id',            
-            'unidad_id'=> 'required|integer|exists:unidad,id',
-            'moneda_id'=> 'required|integer|exists:moneda,id',
-            'igv_id'=> 'required|integer|exists:igv,id'
-            
+            'movimientos_id'=> 'required|integer|exists:movimientos,id',
+            'tipo_documento_id'=> 'required|integer|exists:tipo_documentos,id'
         ];
     }
 
