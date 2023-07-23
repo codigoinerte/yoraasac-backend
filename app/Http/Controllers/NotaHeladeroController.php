@@ -205,7 +205,42 @@ class NotaHeladeroController extends Controller
      */
     public function show($id)
     {
-        $nota_heladero = nota_heladero::find($id);
+        //$nota_heladero = nota_heladero::find($id);
+        $nota_heladero = nota_heladero::query()
+                    ->leftJoin('users as heladero', 'nota_heladeros.user_id', '=', 'heladero.id')
+                    ->leftJoin('users as creador', 'nota_heladeros.id_usuario', '=', 'creador.id')
+                    ->leftJoin('moneda', 'nota_heladeros.moneda_id', '=', 'moneda.id')
+                    ->leftJoin('sucursals', 'nota_heladeros.id_sucursal', '=', 'sucursals.id')
+                    ->leftJoin('nota_heladero_estados as lestado', 'nota_heladeros.estado', '=', 'lestado.id')
+                    ->select(
+                        "nota_heladeros.id",
+                        "nota_heladeros.user_id",
+                        "nota_heladeros.moneda_id",
+                        "nota_heladeros.id_sucursal",
+                        "nota_heladeros.monto",
+                        "nota_heladeros.pago",
+                        "nota_heladeros.debe",
+                        "nota_heladeros.ahorro",
+                        "nota_heladeros.cucharas",
+                        "nota_heladeros.conos",
+                        "nota_heladeros.placas_entregas",
+                        "nota_heladeros.placas_devueltas",
+                        "nota_heladeros.fecha_guardado",
+                        "nota_heladeros.fecha_apertura",
+                        "nota_heladeros.fecha_cierre",
+                        "nota_heladeros.id_usuario",
+                        "nota_heladeros.created_at",
+                        "nota_heladeros.updated_at",
+                        "heladero.documento as heladero_documento",
+                        "heladero.name as heladero_nombre",
+                        "creador.name",
+                        "sucursals.nombre",
+                        "nota_heladeros.estado",
+                        "lestado.nombre as estado_nombre",
+                        "moneda.moneda"
+                    )
+                    ->where('nota_heladeros.id', $id)
+                    ->first();
 
         if($nota_heladero)
         {
