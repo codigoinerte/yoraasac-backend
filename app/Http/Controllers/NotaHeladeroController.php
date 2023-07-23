@@ -409,7 +409,8 @@ class NotaHeladeroController extends Controller
         return $this->response->success($stock, "El registro fue eliminado correctamente");
     }
 
-    public function findNotaGuardada(Request $request){
+    public function findNotaGuardada(Request $request)
+    {
 
         $idusuario = $request->input("idusuario") ?? 0;
 
@@ -469,5 +470,106 @@ class NotaHeladeroController extends Controller
                     ->get();
                     
         return $this->response->success($producto);
+    }
+
+    public function reporte(Request $request)
+    {
+        $documento = $request->input("documento") ?? '';
+        $nombre = $request->input("nombre") ?? '';
+        $estado = $request->input("estado") ?? 0;
+        
+        $fecha_inicio = $request->input("fecha_inicio") ?? "";
+        $fecha_fin = $request->input("fecha_fin") ?? date("Y-m-d");
+        
+        $query = nota_heladero::query()
+                    ->leftJoin('users as heladero', 'nota_heladeros.user_id', '=', 'heladero.id')
+                    ->leftJoin('users as creador', 'nota_heladeros.id_usuario', '=', 'creador.id')
+                    ->leftJoin('moneda', 'nota_heladeros.moneda_id', '=', 'moneda.id')
+                    ->leftJoin('sucursals', 'nota_heladeros.id_sucursal', '=', 'sucursals.id')
+                    ->leftJoin('nota_heladero_estados as lestado', 'nota_heladeros.estado', '=', 'lestado.id')
+                    ->select(
+                        "nota_heladeros.id",
+                        "nota_heladeros.user_id",
+                        "nota_heladeros.moneda_id",
+                        "nota_heladeros.id_sucursal",
+                        "nota_heladeros.monto",
+                        "nota_heladeros.pago",
+                        "nota_heladeros.debe",
+                        "nota_heladeros.ahorro",
+                        "nota_heladeros.cucharas",
+                        "nota_heladeros.conos",
+                        "nota_heladeros.placas_entregas",
+                        "nota_heladeros.placas_devueltas",
+                        "nota_heladeros.fecha_guardado",
+                        "nota_heladeros.fecha_apertura",
+                        "nota_heladeros.fecha_cierre",
+                        "nota_heladeros.id_usuario",
+                        "nota_heladeros.created_at",
+                        "nota_heladeros.updated_at",
+                        "heladero.documento as heladero_documento",
+                        "heladero.name as heladero_nombre",
+                        "creador.name",
+                        "sucursals.nombre",
+                        "lestado.nombre as estado"
+                    );
+
+        if (!empty($documento) && $documento !="") {
+
+            $query->where('heladero.documento', $documento);
+        }
+        
+        if (!empty($nombre) && $nombre !="") {
+            
+            $query->where('heladero.name', 'LIKE', "%$nombre%");
+        }        
+        
+        if(!empty($estado) && $estado != 0){
+            $query->where('nota_heladeros.estado', '=', "$estado");
+        }
+
+        if((!empty($fecha_inicio) && $fecha_inicio != 0) &&
+            (!empty($fecha_fin) && $fecha_fin != 0) ){
+            $query->whereBetween('nota_heladeros.created_at', [$fecha_inicio, $fecha_fin]);
+        }
+
+        $data = $query->orderBy('nota_heladeros.created_at','desc')->get();
+
+        // dd($data);
+
+        $data = $data->toArray() ?? [];
+
+        function convertDate($fecha = ''){
+
+            if($fecha == '') return '';
+
+            $fecha = str_replace("/", "-", $fecha);
+            return date("d-m-Y h:i a", strtotime($fecha));		    
+        }
+
+        $n=0;
+        foreach($data as $key=>$item)
+        {
+            $created_at = $item["created_at"]??'';
+            $fecha_guardado = $item["fecha_guardado"]??'';
+            $fecha_apertura = $item["fecha_apertura"]??'';
+            $fecha_cierre = $item["fecha_cierre"]??'';
+
+            $fecha = str_replace("/", "-", $created_at);
+            $created_at = date("d-m-Y", strtotime($fecha));		    
+
+            $data[$key]["created_at"] = $created_at;
+            $data[$key]["fecha_guardado"] = convertDate($fecha_guardado);
+            $data[$key]["fecha_apertura"] = convertDate($fecha_apertura);
+            $data[$key]["fecha_cierre"] = convertDate($fecha_cierre);
+
+            unset($created_at , $fecha_guardado, $fecha_apertura, $fecha_cierre);
+            $n++;
+        }
+        
+        return response()->json([
+
+            'data' => $data
+
+        ], 200);        
     }
 }
