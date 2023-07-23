@@ -52,6 +52,7 @@ use App\Http\Controllers\SucursalesDocumentosSerieController;
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
+    Route::get('reporte-nota', [NotaHeladeroController::class, 'reporte']);
 
     Route::post('guardar-foto', [PersonasController::class, 'uploadImage']);
 
