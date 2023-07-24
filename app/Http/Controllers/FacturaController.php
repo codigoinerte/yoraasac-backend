@@ -409,4 +409,110 @@ class FacturaController extends Controller
     public function getSeriesDoc() {
         
     }
+
+    public function reporte(Request $request){
+     
+        $documento = $request->input("documento") ?? '';
+        $nombre = $request->input("nombre") ?? '';
+        $estado = $request->input("estado") ?? 0;
+        $tipo = $request->input("tipo") ?? 0;
+        
+        $fecha_inicio = $request->input("fecha_inicio") ?? "";
+        $fecha_fin = $request->input("fecha_fin") ?? date("Y-m-d");
+        
+        $query = Factura::query()
+                ->leftJoin('factura_detalle', 'facturas.id', '=', 'factura_detalle.facturas_id')
+                ->leftJoin('users as usuario', 'facturas.user_id', '=', 'usuario.id')
+                ->leftJoin('moneda', 'facturas.id_moneda', '=', 'moneda.id')
+                ->leftJoin('factura_estados as festado', 'facturas.id_estado', '=', 'festado.id')
+                ->leftJoin('tipo_documentos as nomdoc', 'facturas.tipo', '=', 'nomdoc.id')                    
+                ->select(
+
+                    "facturas.id",
+                    "facturas.codigo",
+                    "facturas.serie",
+                    "facturas.correlativo",
+                    "facturas.user_id",
+                    "facturas.tipo",
+                    "facturas.fecha_pago",
+                    "facturas.id_usuario",
+                    "facturas.created_at",
+                    "facturas.updated_at",
+                    "facturas.sucursals_id",
+                    "facturas.fecha_emision",
+                    "facturas.tipo_transaccion",
+                    "facturas.id_estado",
+                    "facturas.id_moneda",
+                    
+                    "usuario.documento as usuario_documento",
+                    "usuario.name as usuario_nombre",
+                    "festado.estado as estado",
+                    "nomdoc.documento as documento",
+                    "moneda.moneda as moneda"
+                )                    
+                ->selectRaw('SUM(factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))) as total');
+
+        if (!empty($tipo) && $tipo !="") {
+    
+            $query->where('facturas.tipo', '=', "$tipo");
+        }
+
+        if (!empty($documento) && $documento !="") {
+    
+            $query->whereRaw("CONCAT(facturas.serie,'-',facturas.correlativo) = ? ", [$documento]);
+        }
+
+        if (!empty($nombres) && $nombres !="") {
+            
+            $query->where('usuario.name', 'LIKE', "%$nombres%");
+        }                
+        
+        if(!empty($estado) && $estado != 0){
+            $query->where('facturas.id_estado', '=', "$estado");
+        }
+
+        if((!empty($fecha_inicio) && $fecha_inicio != 0) &&
+            (!empty($fecha_fin) && $fecha_fin != 0) ){
+            $query->whereBetween('facturas.created_at', [$fecha_inicio, $fecha_fin]);
+        }
+
+        $data = $query
+                    ->orderBy('facturas.created_at','desc')
+                    ->groupBy('facturas.id')
+                    ->get();
+
+        // dd($data);
+
+        $data = $data->toArray() ?? [];
+
+        function convertDate($fecha = ''){
+
+            if($fecha == '') return '';
+
+            $fecha = str_replace("/", "-", $fecha);
+            return date("d-m-Y h:i a", strtotime($fecha));		    
+        }
+        
+        foreach($data as $key=>$item)
+        {
+            $fecha_pago = $item["fecha_pago"]??'';
+            $created_at = $item["created_at"]??'';
+            $updated_at = $item["updated_at"]??'';
+
+            $fecha_pago = str_replace("/", "-", $fecha_pago);
+            $fecha_pago = date("d-m-Y", strtotime($fecha_pago));		    		    
+
+            $data[$key]["created_at"] = convertDate($created_at);
+            $data[$key]["updated_at"] = convertDate($updated_at);
+            $data[$key]["fecha_pago"] = $fecha_pago;
+
+            unset($fecha_pago , $created_at, $updated_at);            
+        }
+        
+        return response()->json([
+
+            'data' => $data
+
+        ], 200);        
+    }
 }
