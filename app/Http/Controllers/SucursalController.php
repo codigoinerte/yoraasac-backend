@@ -12,9 +12,20 @@ class SucursalController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function __construct()
+    {
+        $this->response = new ResponseController();
+    }
+
     public function index()
     {
-        //
+        $data = sucursal::all();
+
+        return response()->json([
+
+            'data' => $data
+
+        ], 200);
     }
 
     /**
@@ -35,7 +46,7 @@ class SucursalController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        
     }
 
     /**

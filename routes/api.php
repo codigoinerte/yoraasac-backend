@@ -14,6 +14,8 @@ use App\Http\Controllers\UnidadController;
 use App\Http\Controllers\UnspscController;
 use App\Http\Controllers\EstadosController;
 use App\Http\Controllers\FacturaController;
+use App\Http\Controllers\MainConfiguration;
+use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\DistritoController;
 use App\Http\Controllers\PersonasController;
 use App\Http\Controllers\Api\LoginController;
@@ -51,6 +53,10 @@ use App\Http\Controllers\SucursalesDocumentosSerieController;
 // Route::post('login', [LoginController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
+
+    Route::resource('contacto', ContactoController::class);
+
+    Route::resource('configuracion', MainConfiguration::class);
 
     Route::get('reporte-factura', [FacturaController::class, 'reporte']);
 
