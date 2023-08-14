@@ -106,6 +106,7 @@ class MainConfiguration extends Controller
         $email_empresa = $request->input("email_empresa") ?? '';
         $celular = $request->input("celular") ?? '';
         $igv = $request->input("igv") ?? '';
+        $contactos = $request->input("contactos") ?? [];
 
         $sistema = sistema::find($id);
 
@@ -123,9 +124,63 @@ class MainConfiguration extends Controller
 
         $sistema->save();
 
+        foreach($contactos as $contacto){
+            $i_id = $contacto["id"]??0;
+            $i_nombre = $contacto["nombre"]??'';
+            $i_email = $contacto["email"]??'';
+            $i_celular = $contacto["celular"]??'';
+            $i_principal = $contacto["principal"]??0;
+
+            if($i_principal == 1){
+                Contacto::where('principal', '1')->update(['principal' => '0']);
+            }
+
+            $contacto = Contacto::find($i_id);
+
+            if(empty($contacto) || $i_id == 0){
+                $contacto = new Contacto();                
+
+                $contacto->nombre = $i_nombre;
+                $contacto->email = $i_email;
+                $contacto->celular = $i_celular;
+                $contacto->principal = $i_principal;
+                $contacto->sistemas_id = $i_id;
+
+                $contacto->save();
+            }
+            else
+            {
+                $contacto->nombre = $i_nombre;
+                $contacto->email = $i_email;
+                $contacto->celular = $i_celular;
+                $contacto->principal = $i_principal;
+                $contacto->sistemas_id = $i_id;
+                
+                $contacto->save();
+            }
+            
+
+        }
+
+        $contactos = Contacto::all();
+
+        $igvs = Igv::all();
+
+        $response = [
+            "ruc" => $ruc,
+            "razon_social" => $razon_social,
+            "razon_comercial" => $razon_comercial,
+            "pagina_web" => $pagina_web,
+            "email_empresa" => $email_empresa,
+            "celular" => $celular,
+            "igv" => $igv,
+            "contactos"=> $contactos,
+            "igvs"=> $igvs,
+        ];
+
         return response()->json([
 
-            'data' => $sistema
+            'data' => $response
 
         ], 200);
 
