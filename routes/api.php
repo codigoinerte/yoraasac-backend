@@ -28,6 +28,7 @@ use App\Http\Controllers\NotaHeladeroController;
 use App\Http\Controllers\StockHeladosController;
 use App\Http\Controllers\BuscarUsuarioController;
 use App\Http\Controllers\FacturaEstadoController;
+use App\Http\Controllers\LocalesSeriesController;
 use App\Http\Controllers\StockBateriasController;
 use App\Http\Controllers\TipoDocumentoController;
 use App\Http\Controllers\BuscarProductoController;
@@ -53,6 +54,8 @@ use App\Http\Controllers\SucursalesDocumentosSerieController;
 // Route::post('login', [LoginController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
+
+    Route::resource('locales-series', LocalesSeriesController::class);
 
     Route::resource('contacto', ContactoController::class);
 
