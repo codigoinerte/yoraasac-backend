@@ -7,7 +7,7 @@ use App\Models\Sucursal;
 use Illuminate\Http\Request;
 use App\Models\TipoDocumento;
 use Illuminate\Support\Facades\Auth;
-use App\Models\sucursalesDocumentosSerie;
+use App\Models\SucursalesDocumentosSerie;
 use App\Http\Controllers\ResponseController;
 
 class LocalesSeriesController extends Controller
@@ -107,7 +107,7 @@ class LocalesSeriesController extends Controller
 
         $auth = Auth::user();
         $sucursal_id = $auth->sucursals_id ?? 1;
-
+        
         $id_sucursal = $request->input("id")??'';
         $codigo = $request->input("codigo")??'';
         $nombre = $request->input("nombre")??'';
@@ -121,19 +121,37 @@ class LocalesSeriesController extends Controller
         $sucursal = Sucursal::find($id_sucursal);
 
         if(empty($sucursal)){
-            $sucursal = new Sucursal();
+
+            if($nombre !="" && $codigo!=""){
+
+                $sucursal = new Sucursal();
+    
+                $sucursal->codigo = $codigo;
+                $sucursal->codigo_sunat = $codigo_sunat;
+                $sucursal->nombre = $nombre;
+                $sucursal->ubigeo = $ubigeo;
+                $sucursal->departamento = $departamento;
+                $sucursal->provincia = $provincia;
+                $sucursal->distrito = $distrito;
+                $sucursal->direccion = $direccion;
+                
+                $sucursal->save();
+            }
+
+        }else{
+
+            $sucursal->codigo = $codigo;
+            $sucursal->codigo_sunat = $codigo_sunat;
+            $sucursal->nombre = $nombre;
+            $sucursal->ubigeo = $ubigeo;
+            $sucursal->departamento = $departamento;
+            $sucursal->provincia = $provincia;
+            $sucursal->distrito = $distrito;
+            $sucursal->direccion = $direccion;
+            
+            $sucursal->save();
         }
 
-        $sucursal->codigo = $codigo;
-        $sucursal->codigo_sunat = $codigo_sunat;
-        $sucursal->nombre = $nombre;
-        $sucursal->ubigeo = $ubigeo;
-        $sucursal->departamento = $departamento;
-        $sucursal->provincia = $provincia;
-        $sucursal->distrito = $distrito;
-        $sucursal->direccion = $direccion;
-        
-        $sucursal->save();
 
         $series = $request->input("series")??[];
 
@@ -142,31 +160,48 @@ class LocalesSeriesController extends Controller
             foreach($series as $item)
             {
                 $i_id = $item["id"]??0;
-                $i_tipo = $item["tipo"]??0;
+                $i_tipo = $item["idtipo"]??0;
                 $i_serie = $item["serie"]??"";
                 $i_correlativo = $item["correlativo"]??"";
                 $i_estado = $item["estado"]??"";
                 $i_principal = $item["principal"]??"";
-
-                if($i_tipo !=0)
+                
+                if($i_tipo !=0 && $i_tipo!=null && $i_id!=0)
                 {
-                    $sucursales_serie = sucursalesDocumentosSerie::where("id", $i_id)
-                                                                    ->where("tipo", $i_tipo)
-                                                                    ->where("idsucursal", $sucursal_id)
-                                                                    ->first();
-    
-                    if(empty($sucursales_serie)){
-                        $sucursales_serie = new sucursalesDocumentosSerie();                    
+                    $sucursales_serie = SucursalesDocumentosSerie::find($i_id);
+
+                    if(!empty($sucursales_serie)){
+
+                        $sucursales_serie->idsucursal = $sucursal_id;
+                        $sucursales_serie->tipo = $i_tipo;
+                        $sucursales_serie->serie = $i_serie;
+                        $sucursales_serie->correlativo = $i_correlativo;
+                        $sucursales_serie->estado = 1;
+                        $sucursales_serie->principal = 1;
+        
+                        $sucursales_serie->save();
                     }
     
-                    $sucursales_serie->idsucursal = $sucursal_id;
-                    $sucursales_serie->tipo = $i_tipo;
-                    $sucursales_serie->serie = $i_serie;
-                    $sucursales_serie->correlativo = $i_correlativo;
-                    $sucursales_serie->estado = 1;
-                    $sucursales_serie->principal = 1;
-    
-                    $sucursales_serie->save();
+                }else{
+                    
+                    $sucursales_serie = SucursalesDocumentosSerie::where("tipo", $i_tipo)
+                                                                    ->where("idsucursal", $sucursal_id)
+                                                                    ->first();
+                    if(empty($sucursales_serie)){
+
+                        $sucursales_serie = new SucursalesDocumentosSerie();
+                        
+                        $sucursales_serie->idsucursal = $sucursal_id;
+                        $sucursales_serie->tipo = $i_tipo;
+                        $sucursales_serie->serie = $i_serie;
+                        $sucursales_serie->correlativo = $i_correlativo;
+                        $sucursales_serie->estado = 1;
+                        $sucursales_serie->principal = 1;
+        
+                        $sucursales_serie->save();
+                    }
+                    
+
                 }
             }
         }
