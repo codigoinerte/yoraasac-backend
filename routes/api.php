@@ -21,12 +21,14 @@ use App\Http\Controllers\PersonasController;
 use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProvinciaController;
+use App\Http\Controllers\DestacadosController;
 use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\MovimientosController;
 use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\NotaHeladeroController;
 use App\Http\Controllers\StockHeladosController;
 use App\Http\Controllers\BuscarUsuarioController;
+use App\Http\Controllers\DestacadoMenuController;
 use App\Http\Controllers\FacturaEstadoController;
 use App\Http\Controllers\LocalesSeriesController;
 use App\Http\Controllers\StockBateriasController;
@@ -54,6 +56,8 @@ use App\Http\Controllers\SucursalesDocumentosSerieController;
 // Route::post('login', [LoginController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
+
+    Route::resource('destacados', DestacadoMenuController::class);
 
     Route::resource('locales-series', LocalesSeriesController::class);
 
