@@ -48,13 +48,6 @@ use App\Http\Controllers\SucursalesDocumentosSerieController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-
-// Route::post('login', [LoginController::class, 'login']);
-
 Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::resource('destacados', DestacadoMenuController::class);
@@ -122,6 +115,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/distritos',[ DistritoController::class, 'index']);
     Route::get('/distritos/{id}',[ DistritoController::class, 'show'])->where('id', '[0-9]+');
     Route::get('/distritos/filtro/provincia/{id}',[ DistritoController::class, 'showbyprovincia'])->where('id', '[0-9]+');
+
+    Route::put('/account-update', [LoginController::class, 'accountUpdate']);
 });
 
 

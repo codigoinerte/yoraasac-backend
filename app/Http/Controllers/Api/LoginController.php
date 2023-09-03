@@ -4,13 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Requests\accountUser;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
+use App\Http\Controllers\ResponseController;
 
 class LoginController extends Controller
 {
+    public function __construct()
+    {
+        $this->response = new ResponseController();
+    }
+    
     public function login(Request $request)
     {
         $request->validate([
@@ -28,9 +35,16 @@ class LoginController extends Controller
         $token = $user->createToken('authToken')->plainTextToken;
     
         return response([
-            'token' => $token, 
-            'name'=> $user->name , 
-            'surname'=> $user->apellidos, 
+            'token' => $token,
+            'name'=> $user->name,
+            'surname'=> $user->apellidos,
+            'email' => $user->email,
+            'celular' => $user->celular,
+            'pais' => $user->idpais,
+            'departamento' => $user->iddepartamento,
+            'provincia' => $user->idprovincia,
+            'distrito' => $user->iddistrito,
+            'direccion' => $user->direccion,
             'uid' => $user->id], 200);
     }
 
@@ -56,8 +70,15 @@ class LoginController extends Controller
 
         return response()->json([
             'true' => true,
-            'name'=> $user->name , 
-            'surname'=> $user->apellidos, 
+            'name'=> $user->name,
+            'surname'=> $user->apellidos,
+            'email' => $user->email,
+            'celular' => $user->celular,
+            'pais' => $user->idpais,
+            'departamento' => $user->iddepartamento,
+            'provincia' => $user->idprovincia,
+            'distrito' => $user->iddistrito,
+            'direccion' => $user->direccion,
             'uid' => $user->id
         ], 200);
     }
@@ -68,6 +89,46 @@ class LoginController extends Controller
         $tokenOriginal = $request->input('token');
         $token = PersonalAccessToken::findToken($tokenOriginal);
 
-        if ($token) $token->delete();        
+        if ($token) $token->delete();
+    }
+
+    public function accountUpdate(accountUser $request){
+
+        $name = $request->input("name") ?? '';
+        $surname = $request->input("surname") ?? '';
+        $email = $request->input("email") ?? '';
+        $celular = $request->input("celular") ?? '';
+        $idpais = $request->input("idpais") ?? 0;
+        $iddepartamento = $request->input("departamento") ?? 0;
+        $idprovincia = $request->input("provincia") ?? 0;
+        $iddistrito = $request->input("distrito") ?? 0;
+        $direccion = $request->input("direccion") ?? '';
+        $password = $request->input("password") ?? '';
+
+        $authInfo = Auth::user();
+        $user_id = $authInfo->id;
+
+        $auth = User::find($user_id);
+
+        $auth->name = $name;
+        $auth->apellidos = $surname;
+        $auth->email = $email;
+        $auth->celular = $celular;
+        $auth->idpais = $idpais;
+        $auth->iddepartamento = $iddepartamento;
+        $auth->idprovincia = $idprovincia;
+        $auth->iddistrito = $iddistrito;
+        $auth->direccion = $direccion;
+
+        if($idpais == 0){
+            $auth->idpais = 179;
+        }
+        if($password != ''){
+            $auth->password = Hash::make($password);
+        }
+        
+        $auth->save();
+
+        return $this->response->success($auth);
     }
 }
