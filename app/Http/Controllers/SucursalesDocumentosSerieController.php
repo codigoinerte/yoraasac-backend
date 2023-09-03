@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\sucursalesDocumentosSerie;
+use App\Models\SucursalesDocumentosSerie;
 use App\Http\Controllers\ResponseController;
 
 class SucursalesDocumentosSerieController extends Controller
@@ -20,7 +20,7 @@ class SucursalesDocumentosSerieController extends Controller
             return $this->response->error("Faltan algunos parametros");
         }
 
-        $series = sucursalesDocumentosSerie::query()
+        $series = SucursalesDocumentosSerie::query()
         ->where("idsucursal",'=', $sucursal)
         ->where("tipo", '=', $tipo)
         ->where("estado", '=', 1)
@@ -48,7 +48,7 @@ class SucursalesDocumentosSerieController extends Controller
             throw new Exception("Error Processing Request", 1);            
         }
 
-        $series = sucursalesDocumentosSerie::query()
+        $series = SucursalesDocumentosSerie::query()
                     ->where("idsucursal",'=', $sucursal)
                     ->where("tipo", '=', $tipo)
                     ->where("estado", '=', 1)
@@ -69,7 +69,7 @@ class SucursalesDocumentosSerieController extends Controller
             "correlativo"=> $correlativo,
         ];
                 
-        $series = sucursalesDocumentosSerie::find($id);
+        $series = SucursalesDocumentosSerie::find($id);
 
         $correlativo = (int)$correlativo+1;
 
