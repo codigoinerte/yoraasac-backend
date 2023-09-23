@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\tipoDocumento;
+use App\Models\TipoDocumento;
 use Illuminate\Http\Request;
 
 class TipoDocumentoController extends Controller
@@ -14,7 +14,7 @@ class TipoDocumentoController extends Controller
      */
     public function index()
     {
-        $data = tipoDocumento::all();
+        $data = TipoDocumento::all();
 
         return response()->json([
 
