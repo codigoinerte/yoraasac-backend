@@ -473,7 +473,16 @@ class FacturaController extends Controller
 
         if((!empty($fecha_inicio) && $fecha_inicio != 0) &&
             (!empty($fecha_fin) && $fecha_fin != 0) ){
-            $query->whereBetween('facturas.created_at', [$fecha_inicio, $fecha_fin]);
+
+                if($fecha_inicio == $fecha_fin){
+                    $query->whereDate('facturas.created_at', $fecha_inicio);
+                }else{
+                    $query->whereBetween('facturas.created_at', [$fecha_inicio, $fecha_fin]);
+                }
+        }else if(!empty($fecha_inicio) && empty($fecha_fin)){
+            $query->whereDate('facturas.created_at', $fecha_inicio);
+        }else if(empty($fecha_inicio) && !empty($fecha_fin)){
+            $query->whereDate('facturas.created_at', $fecha_fin);
         }
 
         $data = $query
