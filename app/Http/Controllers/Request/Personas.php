@@ -33,7 +33,13 @@ class Personas extends FormRequest
             'documento' => 'required',
             'documento_tipo' => 'required|integer|between:1,7',
             'nombres' => 'required',
-            'apellidos' => 'required',
+            'apellidos' => [
+                function ($attribute, $value, $fail) use ($request) {
+                    if (in_array($request->usuario_tipo, [1, 2, 3, 4, 6, 7]) && is_null($value)) {
+                        $fail('El campo apellidos es obligatorio');
+                    }
+                }
+            ],
             'usuario_tipo'=> 'required|integer|between:1,7',            
             'email'=> [
                 function ($attribute, $value, $fail) use ($request) {

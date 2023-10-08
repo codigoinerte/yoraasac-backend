@@ -45,6 +45,7 @@ class LoginController extends Controller
             'provincia' => $user->idprovincia,
             'distrito' => $user->iddistrito,
             'direccion' => $user->direccion,
+            'type'=> $user->usuario_tipo,
             'uid' => $user->id], 200);
     }
 
@@ -79,6 +80,7 @@ class LoginController extends Controller
             'provincia' => $user->idprovincia,
             'distrito' => $user->iddistrito,
             'direccion' => $user->direccion,
+            'type'=> $user->usuario_tipo,
             'uid' => $user->id
         ], 200);
     }

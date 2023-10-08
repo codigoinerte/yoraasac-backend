@@ -26,6 +26,9 @@ class PersonasController extends Controller
 
     public function index(Request $request)
     {
+        $auth = Auth::user();
+        $authId = $auth->id ?? 0;
+
         $tipo = $request->input('tipo') ?? 4;
         $page = $request->input('page') ?? 1;
 
@@ -34,10 +37,24 @@ class PersonasController extends Controller
         $fecha = $request->input('fecha') ?? '';
 
         $query = User::query();
+        
+        
 
         if (!empty($tipo) && $tipo !="") {
             
-            $query->where('usuario_tipo', "$tipo");
+            if($tipo == 6){
+                $query->where('id', '<>' , "1");
+                $query->where(function($query) {
+                    $query->where('usuario_tipo', 6)
+                            ->orWhere('usuario_tipo', 1)
+                            ->orWhere('usuario_tipo', 2)
+                            ->orWhere('usuario_tipo', 3);
+                });
+                        
+            }
+            else{
+                $query->where('usuario_tipo', "$tipo");
+            }
         }
         
         if (!empty($nombres) && $nombres !="") {
@@ -54,8 +71,13 @@ class PersonasController extends Controller
             $query->whereDate('created_at', $fecha);
         }
         
-        $users = $query->orderBy('created_at','desc')->paginate(10, ['*'], 'page', $page);
+        
+             
 
+        //if()
+        
+        $users = $query->orderBy('created_at','desc')->paginate(10, ['*'], 'page', $page);
+        
         // $users = User::where('usuario_tipo', $tipo)  
         // ->paginate(10, ['*'], 'page', $page);
 
@@ -143,8 +165,16 @@ class PersonasController extends Controller
         $persona->iddepartamento = $departamento;
         $persona->idprovincia = $provincia;
         $persona->iddistrito = $distrito;
-        $persona->email = ($usuario_tipo == 1 || $usuario_tipo == 2 || $usuario_tipo == 3) ? $email : null;
-        $persona->password = ($usuario_tipo == 1 || $usuario_tipo == 2 || $usuario_tipo == 3) ? Hash::make($password) : ''; 
+        
+        if($usuario_tipo == 1 || $usuario_tipo == 2 || $usuario_tipo == 3){
+            if($email!=null) $persona->email = $email;
+            if($password!="") $persona->password = Hash::make($password);
+        }else{
+            $persona->email = null;
+            $persona->password = '';
+        }
+        #$persona->email = ($usuario_tipo == 1 || $usuario_tipo == 2 || $usuario_tipo == 3) ? $email : null;
+        #$persona->password = ($usuario_tipo == 1 || $usuario_tipo == 2 || $usuario_tipo == 3) ? Hash::make($password) : ''; 
         $persona->celular = $celular;
         $persona->direccion = $direccion;
         $persona->usuario_tipo = $usuario_tipo;
