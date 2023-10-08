@@ -43,7 +43,8 @@ class PersonasController extends Controller
         if (!empty($tipo) && $tipo !="") {
             
             if($tipo == 6){
-                $query->where('id', '<>' , "1");
+                $query->where('id', '<>' , $authId);
+                $query->where('id', '<>' , 1);
                 $query->where(function($query) {
                     $query->where('usuario_tipo', 6)
                             ->orWhere('usuario_tipo', 1)
