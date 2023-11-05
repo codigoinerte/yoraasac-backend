@@ -126,6 +126,8 @@ class ProductosController extends Controller
         $marcas_id = $request->input("marcas_id") ?? 0;
         $unidad_id = $request->input("unidad_id") ?? 0;
         $moneda_id = $request->input("moneda_id") ?? 0;
+        $heladero_precio_venta = $request->input("heladero_precio_venta") ?? 0;
+        $heladero_descuento = $request->input("heladero_descuento") ?? 0;
         $igv_id = $request->input("igv_id") ?? 0;
 
         $producto = new Productos();
@@ -142,6 +144,8 @@ class ProductosController extends Controller
         $producto->marcas_id = $marcas_id;
         $producto->unidad_id = $unidad_id;
         $producto->moneda_id = $moneda_id;
+        $producto->heladero_precio_venta = $heladero_precio_venta;
+        $producto->heladero_descuento = $heladero_descuento;
         $producto->igv_id = $igv_id;
 
         $producto->save();
@@ -206,6 +210,8 @@ class ProductosController extends Controller
         $marcas_id = $request->input("marcas_id") ?? 0;
         $unidad_id = $request->input("unidad_id") ?? 0;
         $moneda_id = $request->input("moneda_id") ?? 0;
+        $heladero_precio_venta = $request->input("heladero_precio_venta") ?? 0;
+        $heladero_descuento = $request->input("heladero_descuento") ?? 0;
         $igv_id = $request->input("igv_id") ?? 0;
 
         $producto->codigo = $codigo;
@@ -220,6 +226,8 @@ class ProductosController extends Controller
         $producto->marcas_id = $marcas_id;
         $producto->unidad_id = $unidad_id;
         $producto->moneda_id = $moneda_id;
+        $producto->heladero_precio_venta = $heladero_precio_venta;
+        $producto->heladero_descuento = $heladero_descuento;
         $producto->igv_id = $igv_id;
 
         $producto->save();

@@ -149,14 +149,14 @@ class NotaHeladeroController extends Controller
         $nota_heladero->id_sucursal     = $sucursal_id;
         $nota_heladero->id_usuario      = $user_id;
         //$nota_heladero->fecha_guardado  = $fecha_operacion;
-        if($estado_id == 2)
+        if($estado_id == 2) //re apertura
         {
             $nota_heladero->fecha_apertura  = $fecha_operacion;
         }
         else if($estado_id == 3){ // guardado
             $nota_heladero->fecha_guardado  = $fecha_operacion;
         }
-        else if($estado_id == 1){
+        else if($estado_id == 1){ // cierre
             $nota_heladero->fecha_cierre = $fecha_operacion;
         }
         
