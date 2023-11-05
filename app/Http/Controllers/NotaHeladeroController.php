@@ -20,6 +20,7 @@ class NotaHeladeroController extends Controller
      */
     public function __construct(){
         $this->response = new ResponseController();
+        $this->stock = new StockHeladosController();
     }
     
     public function index(Request $request)
@@ -193,6 +194,44 @@ class NotaHeladeroController extends Controller
         }
 
         $nota_heladero["detalle"] = $detalle;
+
+        $array_detalle = [];
+
+        if(count($productos) > 0)
+        {
+            foreach($productos as $item)
+            {
+                $devolucion = $item["devolucion"]??0;
+                $pedido = $item["pedido"]??0;
+                $codigo = $item["codigo"]??0;
+                $vendido = $item["vendido"]??0;
+                $importe = $item["importe"]??0;
+                
+                if($estado_id == 2){
+                    /* re apertura :  salida */
+                    array_push($array_detalle, [
+                        "codigo" => $codigo,
+                        "cantidad" => $devolucion + $pedido
+                    ]);
+                    
+                }else if($estado_id == 3){
+                    /* guardado:  ingreso */
+                    array_push($array_detalle, [
+                        "codigo" => $codigo,
+                        "cantidad" => $devolucion
+                    ]);
+                }else if($estado_id == 1){
+                    /*salida*/
+                    array_push($array_detalle, [
+                        "codigo" => $codigo,
+                        "cantidad" => $vendido
+                    ]);
+                }
+            }
+        }
+
+        
+        $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle);
         
         return $this->response->success($nota_heladero);
     }
@@ -256,17 +295,26 @@ class NotaHeladeroController extends Controller
                                     "nota_heladero_detalle.created_at",
                                     "nota_heladero_detalle.updated_at",
                                     "nota_heladero_detalle.codigo",
-                                    "productos.nombre as producto"
+                                    "productos.nombre as producto",
+                                    "productos.heladero_precio_venta",
+                                    "productos.heladero_descuento"
                                 )
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
                                 ->orderBy('nota_heladero_detalle.created_at','desc')
                                 ->get();
+
+            foreach($detalle as $key=>$item){
+                $heladero_precio_venta = $item["heladero_precio_venta"] ?? '';
+                $heladero_descuento = $item["heladero_descuento"] ?? '';
+                $precio_operacion = $heladero_precio_venta - ($heladero_precio_venta * ($heladero_descuento / 100));
+                
+                $detalle[$key]["precio_operacion"] = $precio_operacion;
+            }
                             /*
                             ->where("nota_heladeros_id","=", $id)
                             ->orderBy('created_at','desc')
                             ->get();
-                            */
-
+                            */            
             $nota_heladero["detalle"] = $detalle;
 
             return $this->response->success($nota_heladero, "El registro fue encontrado");
@@ -381,6 +429,44 @@ class NotaHeladeroController extends Controller
         }
 
         $nota_heladero["detalle"] = $detalle;
+
+        $array_detalle = [];
+
+        if(count($productos) > 0)
+        {
+            foreach($productos as $item)
+            {
+                $devolucion = $item["devolucion"]??0;
+                $pedido = $item["pedido"]??0;
+                $codigo = $item["codigo"]??0;
+                $vendido = $item["vendido"]??0;
+                $importe = $item["importe"]??0;
+                
+                if($estado_id == 2){
+                    /* re apertura :  salida */
+                    array_push($array_detalle, [
+                        "codigo" => $codigo,
+                        "cantidad" => $devolucion + $pedido
+                    ]);
+                    
+                }else if($estado_id == 3){
+                    /* guardado:  ingreso */
+                    array_push($array_detalle, [
+                        "codigo" => $codigo,
+                        "cantidad" => $devolucion
+                    ]);
+                }else if($estado_id == 1){
+                    /*salida*/
+                    array_push($array_detalle, [
+                        "codigo" => $codigo,
+                        "cantidad" => $vendido
+                    ]);
+                }
+            }
+        }
+
+        
+        $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle);
         
         return $this->response->success($nota_heladero);
     }
@@ -446,11 +532,27 @@ class NotaHeladeroController extends Controller
                                     "nota_heladero_detalle.created_at",
                                     "nota_heladero_detalle.updated_at",
                                     "nota_heladero_detalle.codigo",
-                                    "productos.nombre as producto"
+                                    "productos.nombre as producto",
+                                    "productos.heladero_precio_venta",
+                                    "productos.heladero_descuento"                                    
                                 )
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
                                 ->orderBy('nota_heladero_detalle.created_at','desc')
                                 ->get();
+
+            foreach($detalle as $key=>$item){
+                $heladero_precio_venta = $item["heladero_precio_venta"] ?? '';
+                $heladero_descuento = $item["heladero_descuento"] ?? '';
+                $precio_operacion = $heladero_precio_venta - ($heladero_precio_venta * ($heladero_descuento / 100));
+                
+                $detalle[$key]["precio_operacion"] = $precio_operacion;
+            }
+                            /*
+                            ->where("nota_heladeros_id","=", $id)
+                            ->orderBy('created_at','desc')
+                            ->get();
+                            */
+
 
             $nota_heladero["detalle"] = $detalle;
 

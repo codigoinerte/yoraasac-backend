@@ -286,4 +286,90 @@ class StockHeladosController extends Controller
 
         return $this->response->success($stock, "El registro fue eliminado correctamente");
     }
+
+    public function createMovimientoStock($tipo, $estado, $iddoc, $iduser, $array_detalle = [], $movimiento = 2){
+
+        $movimientos_id = $movimiento;
+        if($tipo == "nota"){
+
+            if($estado == 2){
+                /* reapertura los helados seran agregados al usuario y saldran de almacen : salida*/
+                $tipo_documento_id = 4;
+                $movimientos_id = 2;
+            }
+            else if($estado == 3){
+                /* guardado de helados del heladero vuelven al almacen y al congelador para el dia siguiente: entrada*/
+                $tipo_documento_id = 5;
+                $movimientos_id = 1;
+            }else if($estado == 1){
+                /* cierre de nota, se hace el calculo de la venta: salida - final*/
+                $tipo_documento_id = 5;
+                $movimientos_id = 2;
+            }
+            
+        }else if($tipo == "factura_venta"){
+            $tipo_documento_id = 2;
+            $movimientos_id = 2;
+        }else if($tipo == "boleta_venta"){
+            $tipo_documento_id = 1;
+            $movimientos_id = 2;
+        }else if($tipo == "factura_compra"){
+            $tipo_documento_id = 3;
+            $movimientos_id = 1;
+        }else if($tipo == "nota_venta"){
+            $tipo_documento_id = 7;
+            $movimientos_id = 2;
+        }else{            
+            $tipo_documento_id = 6;
+        }
+
+        $fecha_movimiento = date("Y-m-d");
+        $numero_documento = str_pad("$iddoc$iduser", 12, "0", STR_PAD_LEFT);
+
+        $codigo = '';
+
+        $stock = new StockHelados();
+
+        $stock->codigo_movimiento = $codigo;
+        $stock->movimientos_id = $movimientos_id;
+        $stock->tipo_documento_id = $tipo_documento_id;
+        $stock->numero_documento = $numero_documento;
+        $stock->fecha_movimiento = $fecha_movimiento;        
+        
+        $stock->save();
+
+        $idStock = $stock->id;
+
+        /* añadir codigo */
+        $codigo = str_pad($idStock, 7, "0", STR_PAD_LEFT);        
+        $stock->codigo_movimiento = "sth-".$codigo;
+
+        $stock->save();     
+        /* añadir codigo */
+
+        $detalle = [];
+
+        if(count($array_detalle) > 0)
+        {
+            foreach($array_detalle as $item)
+            {
+                $codigo = $item["codigo"]??'';                
+                $cantidad = $item["cantidad"]??0;
+
+                $newDetail = new StockHeladosDetail();
+
+                $newDetail->codigo = $codigo;
+                $newDetail->stock_helados_id = $idStock;
+                $newDetail->cantidad = $cantidad;
+
+                $newDetail->save();
+
+                array_push($detalle, $newDetail);
+            }
+        }
+
+        $stock["detalle"] = $detalle;        
+
+        return $this->response->success($stock);
+    }
 }
