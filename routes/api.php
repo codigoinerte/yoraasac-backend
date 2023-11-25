@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProvinciaController;
 use App\Http\Controllers\DestacadosController;
+use App\Http\Controllers\StockHistorialHelado;
 use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\MovimientosController;
 use App\Http\Controllers\DepartamentoController;
@@ -85,6 +86,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('persona', PersonasController::class);
 
     Route::resource('producto', ProductosController::class);
+
+    Route::get('stock-historial-helado', [StockHistorialHelado::class,'index']);
 
     Route::resource('stock-helado', StockHeladosController::class);
 
