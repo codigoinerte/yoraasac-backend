@@ -230,8 +230,16 @@ class NotaHeladeroController extends Controller
             }
         }
 
+        $iddoc = $nota_heladero->id;
+        $nota_heladero = nota_heladero::find($iddoc);
+
         
-        $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle);
+        $numero_documento = str_pad("$iddoc$heladero_id", 12, "0", STR_PAD_LEFT);
+
+        $nota_heladero->codigo = $numero_documento;
+        $nota_heladero->save();
+        
+        $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $numero_documento);
         
         return $this->response->success($nota_heladero);
     }
@@ -466,7 +474,7 @@ class NotaHeladeroController extends Controller
         }
 
         
-        $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle);
+        $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $nota_heladero->codigo);
         
         return $this->response->success($nota_heladero);
     }
