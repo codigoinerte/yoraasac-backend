@@ -111,6 +111,9 @@ class StockHeladosController extends Controller
 
         $array_detalle = $request->input("detalle")??[];
 
+        $auth = Auth::user();
+        $user_creador = $auth->id;
+
         $codigo = '';
 
         $stock = new StockHelados();
@@ -120,6 +123,7 @@ class StockHeladosController extends Controller
         $stock->tipo_documento_id = $tipo_documento_id;
         $stock->numero_documento = $numero_documento;
         $stock->fecha_movimiento = $fecha_movimiento;        
+        $stock->user_id = $user_creador;
         
         $stock->save();
 
@@ -287,7 +291,7 @@ class StockHeladosController extends Controller
         return $this->response->success($stock, "El registro fue eliminado correctamente");
     }
 
-    public function createMovimientoStock($tipo, $estado, $iddoc, $iduser, $array_detalle = [], $movimiento = 2){
+    public function createMovimientoStock($tipo, $estado, $iddoc, $iduser, $array_detalle = [], $movimiento = 2, $numero_documento){
 
         $movimientos_id = $movimiento;
         if($tipo == "nota"){
@@ -324,9 +328,11 @@ class StockHeladosController extends Controller
         }
 
         $fecha_movimiento = date("Y-m-d");
-        $numero_documento = str_pad("$iddoc$iduser", 12, "0", STR_PAD_LEFT);
 
         $codigo = '';
+
+        $auth = Auth::user();
+        $user_creador = $auth->id;
 
         $stock = new StockHelados();
 
@@ -334,7 +340,8 @@ class StockHeladosController extends Controller
         $stock->movimientos_id = $movimientos_id;
         $stock->tipo_documento_id = $tipo_documento_id;
         $stock->numero_documento = $numero_documento;
-        $stock->fecha_movimiento = $fecha_movimiento;        
+        $stock->fecha_movimiento = $fecha_movimiento;
+        $stock->user_id = $user_creador;
         
         $stock->save();
 
