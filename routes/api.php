@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\IgvController;
 use App\Http\Controllers\PaisController;
 use Laravel\Sanctum\PersonalAccessToken;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\MarcasController;
 use App\Http\Controllers\MonedaController;
 use App\Http\Controllers\UnidadController;
@@ -86,6 +87,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('persona', PersonasController::class);
 
     Route::resource('producto', ProductosController::class);
+
+    Route::get('stock', [StockController::class,'index']);
 
     Route::get('stock-historial-helado', [StockHistorialHelado::class,'index']);
 
