@@ -35,7 +35,8 @@ class StockHistorialHelado extends Controller
                    end as user_related 
                   FROM stock_helados sh
                   LEFT JOIN movimientos mv ON mv.id = sh.movimientos_id
-                  LEFT JOIN tipo_documentos td ON td.id = sh.tipo_documento_id ";
+                  LEFT JOIN tipo_documentos td ON td.id = sh.tipo_documento_id 
+                  ORDER BY sh.created_at DESC";
         $data = DB::select(DB::raw($query));
         
         if(!empty($data)){
