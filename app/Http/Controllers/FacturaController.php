@@ -34,7 +34,13 @@ class FacturaController extends Controller
                     ->leftJoin('users as usuario', 'facturas.user_id', '=', 'usuario.id')
                     ->leftJoin('moneda', 'facturas.id_moneda', '=', 'moneda.id')
                     ->leftJoin('factura_estados as festado', 'facturas.id_estado', '=', 'festado.id')
-                    ->leftJoin('tipo_documentos as nomdoc', 'facturas.tipo', '=', 'nomdoc.id')                    
+                    ->leftJoin('tipo_documentos as nomdoc', 'facturas.tipo', '=', 'nomdoc.id')
+                    /*
+                    ->leftJoin('factura_detalle', 'facturas.id', '=', 'factura_detalle.facturas_id')
+                    ->leftJoin('users as usuario', 'facturas.user_id', '=', 'usuario.id')
+                    ->leftJoin('moneda', 'facturas.id_moneda', '=', 'moneda.id')
+                    ->leftJoin('factura_estados as festado', 'facturas.id_estado', '=', 'festado.id')
+                    ->leftJoin('tipo_documentos as nomdoc', 'facturas.tipo', '=', 'nomdoc.id')
                     ->select(
 
                         "facturas.id",
@@ -57,9 +63,41 @@ class FacturaController extends Controller
                         "usuario.name as usuario_nombre",
                         "festado.estado as estado",
                         "nomdoc.documento as documento",
-                        "moneda.moneda as moneda"
-                    )                    
-                    ->selectRaw('SUM(factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))) as total');
+                        "moneda.moneda as moneda",
+                        "(
+                            factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))
+                        ) as total"
+                    ); 
+                    */                   
+                    ->selectRaw('
+                        
+                            facturas.id,
+                            facturas.codigo,
+                            facturas.serie,
+                            facturas.correlativo,
+                            facturas.user_id,
+                            facturas.tipo,
+                            facturas.fecha_pago,
+                            facturas.id_usuario,
+                            facturas.created_at,
+                            facturas.updated_at,
+                            facturas.sucursals_id,
+                            facturas.fecha_emision,
+                            facturas.tipo_transaccion,
+                            facturas.id_estado,
+                            facturas.id_moneda,
+                            usuario.documento as usuario_documento,
+                            usuario.name as usuario_nombre,
+                            festado.estado as estado,
+                            nomdoc.documento as documento,
+                            moneda.moneda as moneda,
+                            (
+                                SELECT factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))
+                                FROM factura_detalle
+                                WHERE factura_detalle.facturas_id = facturas.id
+                            ) as total                           
+                        ');
+                    //->selectRaw('SUM(factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))) as total');
                     
             
         if (!empty($documento) && $documento !="") {
@@ -78,7 +116,6 @@ class FacturaController extends Controller
         
         $users = $query
                     ->orderBy('facturas.created_at','desc')
-                    ->groupBy('facturas.id')
                     ->paginate(10, ['*'], 'page', $page);
 
         $nextPageUrl = $users->nextPageUrl();
