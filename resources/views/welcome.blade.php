@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Yoraasac</title>
-    <script type="module" crossorigin src="{{ asset("/assets/index-c64bd62c.js") }}"></script>
+    <script type="module" crossorigin src="{{ asset("/assets/index-7f306be3.js") }}"></script>
     <link rel="stylesheet" href="{{ asset("/assets/index-2b2ba6c9.css") }}">
   </head>
   <body>
