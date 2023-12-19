@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Artisan;
 |
 */
 
-Route::get('/', function () {
+Route::get('/{any:.*}', function () {
     return view('welcome');
-});
+})->where('any', '.*')->fallback();
 
 Route::get('/clear-cache-laravel', function(){
     Artisan::call('route:clear');
