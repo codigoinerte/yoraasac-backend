@@ -130,6 +130,7 @@ class ProductosController extends Controller
         $heladero_descuento = $request->input("heladero_descuento") ?? 0;
         $igv_id = $request->input("igv_id") ?? 0;
         $cantidad_caja = $request->input("cantidad_caja") ?? 0;
+        $proveedor_precio = $request->input("proveedor_precio") ?? 0;
 
         $producto = new Productos();
 
@@ -149,6 +150,7 @@ class ProductosController extends Controller
         $producto->heladero_descuento = $heladero_descuento;
         $producto->igv_id = $igv_id;
         $producto->cantidad_caja = $cantidad_caja;
+        $producto->proveedor_precio = $proveedor_precio;
 
         $producto->save();
 
@@ -216,6 +218,7 @@ class ProductosController extends Controller
         $heladero_descuento = $request->input("heladero_descuento") ?? 0;
         $igv_id = $request->input("igv_id") ?? 0;
         $cantidad_caja = $request->input("cantidad_caja") ?? 0;
+        $proveedor_precio = $request->input("proveedor_precio") ?? 0;
 
         $producto->codigo = $codigo;
         $producto->nombre = $nombre;
@@ -233,6 +236,7 @@ class ProductosController extends Controller
         $producto->heladero_descuento = $heladero_descuento;
         $producto->igv_id = $igv_id;
         $producto->cantidad_caja = $cantidad_caja;
+        $producto->proveedor_precio = $proveedor_precio;
 
         $producto->save();
 
