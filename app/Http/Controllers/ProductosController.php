@@ -65,15 +65,15 @@ class ProductosController extends Controller
             $query->whereDate('productos.created_at', $fecha);
         }
         
-        $productos = $query->orderBy('productos.created_at','desc')->paginate(10, ['*'], 'page', $page);
+        $data = $query->orderBy('productos.codigo','desc')->get(); //->paginate(10, ['*'], 'page', $page);
 
-        $nextPageUrl = $productos->nextPageUrl();
-        $previousPageUrl = $productos->previousPageUrl();
+        //$nextPageUrl = $productos->nextPageUrl();
+        //$previousPageUrl = $productos->previousPageUrl();
 
-        parse_str(parse_url($nextPageUrl, PHP_URL_QUERY), $nextPageQueryParams);
-        parse_str(parse_url($previousPageUrl, PHP_URL_QUERY), $previousPageQueryParams);
+        //parse_str(parse_url($nextPageUrl, PHP_URL_QUERY), $nextPageQueryParams);
+        //parse_str(parse_url($previousPageUrl, PHP_URL_QUERY), $previousPageQueryParams);
 
-        $data = $productos->toArray()["data"] ?? [];
+        //$data = $productos->toArray()["data"] ?? [];
 
         $n=0;
         foreach($data as $item)
@@ -83,15 +83,15 @@ class ProductosController extends Controller
             $fecha = str_replace("/", "-", $created_at);
             $newDate = date("d-m-Y", strtotime($fecha));		    
 
-            $data[$n]["created_at"] = $newDate;
+            $data[$n]["created_at_spanish"] = $newDate;
             $n++;
         }
         
         return response()->json([
 
             'data' => $data,
-            'next_page' => isset($nextPageQueryParams['page']) ? $nextPageQueryParams['page'] : null,
-            'previous_page' => isset($previousPageQueryParams['page']) ? $previousPageQueryParams['page'] : null,
+            'next_page' => null,
+            'previous_page' => null,
 
         ], 200);
     }
