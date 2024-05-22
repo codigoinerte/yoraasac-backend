@@ -15,9 +15,15 @@ use Illuminate\Support\Facades\Artisan;
 |
 */
 
-Route::get('/{any:.*}', function () {
+Route::get('/', function () {
     return view('welcome');
-})->where('any', '.*')->fallback();
+});
+
+/*recordar eliminar la carpeta original para poder volver a regenerarlo*/
+Route::get('/symlink-artisan', function(){
+    Artisan::call('storage:link');
+    return 'Symlink created successfully.';
+});
 
 Route::get('/clear-cache-laravel', function(){
     Artisan::call('route:clear');
@@ -25,11 +31,11 @@ Route::get('/clear-cache-laravel', function(){
     Artisan::call('config:clear');
     Artisan::call('config:cache');
     Artisan::call('cache:clear');
-    Artisan::call('optimize');
     Artisan::call('clear-compiled');
-
     
-    Cache::flush();
+    //Artisan::call('optimize');
+    
+    //Cache::flush();
 
     return 'Cache refreshed successfully.';
 });
