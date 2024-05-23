@@ -576,7 +576,7 @@ class NotaHeladeroController extends Controller
     {
         $producto = Productos::query()
                     ->where("estados_id", "=", 1)
-                    ->orderBy('nombre','asc')
+                    ->orderBy('codigo','asc')
                     ->get();
                     
         return $this->response->success($producto);
