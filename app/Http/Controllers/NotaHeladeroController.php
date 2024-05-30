@@ -308,7 +308,7 @@ class NotaHeladeroController extends Controller
                                     "productos.heladero_descuento"
                                 )
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
-                                ->orderBy('nota_heladero_detalle.created_at','desc')
+                                ->orderBy('nota_heladero_detalle.codigo','asc')
                                 ->get();
 
             foreach($detalle as $key=>$item){
@@ -545,7 +545,7 @@ class NotaHeladeroController extends Controller
                                     "productos.heladero_descuento"                                    
                                 )
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
-                                ->orderBy('nota_heladero_detalle.created_at','desc')
+                                ->orderBy('nota_heladero_detalle.codigo','asc')
                                 ->get();
 
             foreach($detalle as $key=>$item){
