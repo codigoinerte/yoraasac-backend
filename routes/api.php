@@ -123,6 +123,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/distritos/filtro/provincia/{id}',[ DistritoController::class, 'showbyprovincia'])->where('id', '[0-9]+');
 
     Route::put('/account-update', [LoginController::class, 'accountUpdate']);
+
+    Route::post('/hota-heladero-fecha-operacion/{id}', [NotaHeladeroController::class, 'saveDateOperation']);
 });
 
 
