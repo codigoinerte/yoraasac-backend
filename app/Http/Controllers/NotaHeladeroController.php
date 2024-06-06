@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\productos;
 use Illuminate\Http\Request;
 use App\Models\nota_heladero;
+use Illuminate\Support\Facades\DB;
 use App\Models\NotaHeladeroDetalle;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\MonedaController;
@@ -134,6 +135,7 @@ class NotaHeladeroController extends Controller
         $estado_id = $request->input("estado") ?? 0;        
         $fecha_operacion = $request->input("fecha_operacion") ?? '';
         $productos = $request->input("productos")??[];
+        $parent_id = $request->input("parent_id")??0;
 
         $monedaController = new MonedaController();        
         $moneda_id = $monedaController->getMonedaPrincipal()->id ?? 1;
@@ -149,6 +151,8 @@ class NotaHeladeroController extends Controller
         $nota_heladero->moneda_id       = $moneda_id;
         $nota_heladero->id_sucursal     = $sucursal_id;
         $nota_heladero->id_usuario      = $user_id;
+        $nota_heladero->parent_id       = $parent_id;
+
         //$nota_heladero->fecha_guardado  = $fecha_operacion;
         if($estado_id == 2) //re apertura
         {
@@ -307,6 +311,12 @@ class NotaHeladeroController extends Controller
                                     "productos.heladero_precio_venta",
                                     "productos.heladero_descuento"
                                 )
+                                ->addSelect(DB::raw('(  
+                                        SELECT nd.devolucion 
+                                        FROM nota_heladero_detalle as nd 
+                                        LEFT JOIN nota_heladeros nh ON nh.id = nd.nota_heladeros_id
+                                        WHERE nd.codigo = nota_heladero_detalle.codigo AND nh.parent_id = nota_heladero_detalle.nota_heladeros_id
+                                        ) as devolucion_today'))
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
                                 ->orderBy('nota_heladero_detalle.codigo','asc')
                                 ->get();
@@ -363,6 +373,7 @@ class NotaHeladeroController extends Controller
         $estado_id = $request->input("estado") ?? 0;        
         $fecha_operacion = $request->input("fecha_operacion") ?? '';
         $productos = $request->input("productos")??[];
+        $parent_id = $request->input("parent_id")??0;
 
         $nota_heladero->estado = $estado_id;
         /*
@@ -382,6 +393,7 @@ class NotaHeladeroController extends Controller
             $nota_heladero->fecha_cierre = $fecha_operacion;
         }
 
+        $nota_heladero->parent_id = $parent_id;
         $nota_heladero->cucharas = 0;
         $nota_heladero->conos = 0;
 
@@ -540,10 +552,17 @@ class NotaHeladeroController extends Controller
                                     "nota_heladero_detalle.created_at",
                                     "nota_heladero_detalle.updated_at",
                                     "nota_heladero_detalle.codigo",
+                                    "nota_heladero_detalle.parent_id",
                                     "productos.nombre as producto",
                                     "productos.heladero_precio_venta",
                                     "productos.heladero_descuento"                                    
                                 )
+                                ->addSelect(DB::raw('(  
+                                    SELECT nd.devolucion 
+                                    FROM nota_heladero_detalle as nd 
+                                    LEFT JOIN nota_heladeros nh ON nh.id = nd.nota_heladeros_id
+                                    WHERE nd.codigo = nota_heladero_detalle.codigo AND nh.parent_id = nota_heladero_detalle.nota_heladeros_id
+                                    ) as devolucion_today'))
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
                                 ->orderBy('nota_heladero_detalle.codigo','asc')
                                 ->get();
@@ -616,6 +635,7 @@ class NotaHeladeroController extends Controller
                         "nota_heladeros.id_usuario",
                         "nota_heladeros.created_at",
                         "nota_heladeros.updated_at",
+                        "nota_heladeros.parent_id",
                         "heladero.documento as heladero_documento",
                         "heladero.name as heladero_nombre",
                         "creador.name",
@@ -681,5 +701,33 @@ class NotaHeladeroController extends Controller
             'data' => $data
 
         ], 200);        
+    }
+
+    public function saveDateOperation(Request $request, $id) {
+        $type = $request->input("estado") ?? '';
+        $date = $request->input("fecha_operacion") ?? '';
+        
+        if(empty($id))
+            return $this->response->error("No se envio un id valido");
+        
+        $nota_heladero = nota_heladero::find($id);
+
+        if(empty($nota_heladero))
+            return $this->response->error("No se envio un id valido");
+        
+        
+        if($type == 2){ //re apertura        
+            $nota_heladero->fecha_apertura = $date;
+        }
+        else if($type == 3){ // guardado
+            $nota_heladero->fecha_guardado = $date;
+        }
+        else if($type == 1){ // cierre
+            $nota_heladero->fecha_cierre = $date;
+        }
+
+        $nota_heladero->save();
+
+        return $this->response->success($nota_heladero);        
     }
 }
