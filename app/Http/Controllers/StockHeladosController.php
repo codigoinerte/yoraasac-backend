@@ -301,7 +301,7 @@ class StockHeladosController extends Controller
                 $tipo_documento_id = 4;
                 $movimientos_id = 2;
             }
-            else if($estado == 3){
+            else if($estado == 3 || $estado == 4){
                 /* guardado de helados del heladero vuelven al almacen y al congelador para el dia siguiente: entrada*/
                 $tipo_documento_id = 5;
                 $movimientos_id = 1;
