@@ -137,6 +137,11 @@ class NotaHeladeroController extends Controller
         $productos = $request->input("productos")??[];
         $parent_id = $request->input("parent_id")??0;
 
+        $monto = $request->input("monto")??0;
+        $pago = $request->input("pago")??0;
+        $debe = $request->input("debe")??0;
+        $ahorro = $request->input("ahorro")??0;
+
         $monedaController = new MonedaController();        
         $moneda_id = $monedaController->getMonedaPrincipal()->id ?? 1;
 
@@ -152,6 +157,10 @@ class NotaHeladeroController extends Controller
         $nota_heladero->id_sucursal     = $sucursal_id;
         $nota_heladero->id_usuario      = $user_id;
         $nota_heladero->parent_id       = $parent_id;
+        $nota_heladero->monto           = $monto;
+        $nota_heladero->pago            = $pago;
+        $nota_heladero->debe            = $debe;
+        $nota_heladero->ahorro          = $ahorro;
 
         //$nota_heladero->fecha_guardado  = $fecha_operacion;
         if($estado_id == 2) //re apertura
@@ -245,7 +254,9 @@ class NotaHeladeroController extends Controller
         
         $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $numero_documento);
         
-        return $this->response->success($nota_heladero);
+        //return $this->response->success($nota_heladero);
+
+        return $this->show($nota_heladero->id);
     }
 
     /**
@@ -375,6 +386,11 @@ class NotaHeladeroController extends Controller
         $productos = $request->input("productos")??[];
         $parent_id = $request->input("parent_id")??0;
 
+        $monto = $request->input("monto")??0;
+        $pago = $request->input("pago")??0;
+        $debe = $request->input("debe")??0;
+        $ahorro = $request->input("ahorro")??0;
+
         $nota_heladero->estado = $estado_id;
         /*
         1:Cierre - fecha_cierre
@@ -393,9 +409,13 @@ class NotaHeladeroController extends Controller
             $nota_heladero->fecha_cierre = $fecha_operacion;
         }
 
-        $nota_heladero->parent_id = $parent_id;
-        $nota_heladero->cucharas = 0;
-        $nota_heladero->conos = 0;
+        $nota_heladero->monto       = $monto;
+        $nota_heladero->pago        = $pago;
+        $nota_heladero->debe        = $debe;
+        $nota_heladero->ahorro      = $ahorro;
+        $nota_heladero->parent_id   = $parent_id;
+        $nota_heladero->cucharas    = 0;
+        $nota_heladero->conos       = 0;
 
         $nota_heladero->save();
 
@@ -488,7 +508,8 @@ class NotaHeladeroController extends Controller
         
         $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $nota_heladero->codigo);
         
-        return $this->response->success($nota_heladero);
+        return $this->show($id);
+        //return $this->response->success($nota_heladero);
     }
 
     /**
@@ -525,7 +546,7 @@ class NotaHeladeroController extends Controller
         }
 
         $nota_heladero = nota_heladero::query()
-        ->whereRaw('user_id = ? AND (estado = ? OR estado = ?) ', [$idusuario, 3, 2])                            
+        ->whereRaw('user_id = ? AND (estado = ? OR estado = ? OR estado = ?) ', [$idusuario, 3, 2 , 4])
         ->orderBy('created_at','desc')
         ->first();
         
@@ -552,7 +573,6 @@ class NotaHeladeroController extends Controller
                                     "nota_heladero_detalle.created_at",
                                     "nota_heladero_detalle.updated_at",
                                     "nota_heladero_detalle.codigo",
-                                    "nota_heladero_detalle.parent_id",
                                     "productos.nombre as producto",
                                     "productos.heladero_precio_venta",
                                     "productos.heladero_descuento"                                    
@@ -721,6 +741,7 @@ class NotaHeladeroController extends Controller
         }
         else if($type == 3){ // guardado
             $nota_heladero->fecha_guardado = $date;
+            $nota_heladero->estado = 3;
         }
         else if($type == 1){ // cierre
             $nota_heladero->fecha_cierre = $date;
