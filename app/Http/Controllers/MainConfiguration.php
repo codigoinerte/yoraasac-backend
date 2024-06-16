@@ -108,6 +108,7 @@ class MainConfiguration extends Controller
         $email_empresa = $request->input("email_empresa") ?? '';
         $celular = $request->input("celular") ?? '';
         $igv = $request->input("igv") ?? '';
+        $logo = $request->input("logo") ?? '';
         $contactos = $request->input("contactos") ?? [];
 
         $sistema = sistema::find($id);
@@ -123,6 +124,7 @@ class MainConfiguration extends Controller
         $sistema->email_empresa = $email_empresa;
         $sistema->celular = $celular;
         $sistema->igv = $igv;
+        $sistema->logo = $logo;
 
         $sistema->save();
 
@@ -178,6 +180,7 @@ class MainConfiguration extends Controller
             "igv" => $igv,
             "contactos"=> $contactos,
             "igvs"=> $igvs,
+            "logo"=> $logo,
         ];
 
         return response()->json([
