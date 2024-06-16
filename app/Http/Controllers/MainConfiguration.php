@@ -34,6 +34,7 @@ class MainConfiguration extends Controller
         $email_empresa = $sistemas->email_empresa ?? '';
         $celular = $sistemas->celular ?? '';    
         $igv = $sistemas->igv ?? 1;
+        $logo = $sistemas->logo ?? '';
 
         $response = [
             "ruc" => $ruc,
@@ -45,6 +46,7 @@ class MainConfiguration extends Controller
             "igv" => $igv,
             "contactos"=> $contactos,
             "igvs"=> $igvs,
+            "logo"=> $logo,
         ];
 
         
