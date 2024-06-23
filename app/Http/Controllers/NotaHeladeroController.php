@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
+use App\Models\User;
 use App\Models\productos;
 use Illuminate\Http\Request;
 use App\Models\nota_heladero;
@@ -320,7 +322,8 @@ class NotaHeladeroController extends Controller
                                     "nota_heladero_detalle.codigo",
                                     "productos.nombre as producto",
                                     "productos.heladero_precio_venta",
-                                    "productos.heladero_descuento"
+                                    "productos.heladero_descuento",
+                                    "productos.is_litro"
                                 )
                                 ->addSelect(DB::raw('(  
                                         SELECT nd.devolucion 
@@ -575,7 +578,8 @@ class NotaHeladeroController extends Controller
                                     "nota_heladero_detalle.codigo",
                                     "productos.nombre as producto",
                                     "productos.heladero_precio_venta",
-                                    "productos.heladero_descuento"                                    
+                                    "productos.heladero_descuento",
+                                    "productos.is_litro"
                                 )
                                 ->addSelect(DB::raw('(  
                                     SELECT nd.devolucion 
@@ -623,70 +627,85 @@ class NotaHeladeroController extends Controller
 
     public function reporte(Request $request)
     {
-        $documento = $request->input("documento") ?? '';
-        $nombre = $request->input("nombre") ?? '';
+        $user_id = $request->input("user_id") ?? '';
         $estado = $request->input("estado") ?? 0;
         
         $fecha_inicio = $request->input("fecha_inicio") ?? "";
         $fecha_fin = $request->input("fecha_fin") ?? date("Y-m-d");
         
-        $query = nota_heladero::query()
-                    ->leftJoin('users as heladero', 'nota_heladeros.user_id', '=', 'heladero.id')
+        /*
+        $query = User::query()
+                    ->join('nota_heladeros as nota_heladeros', 'nota_heladeros.user_id', '=', 'users.id')
                     ->leftJoin('users as creador', 'nota_heladeros.id_usuario', '=', 'creador.id')
                     ->leftJoin('moneda', 'nota_heladeros.moneda_id', '=', 'moneda.id')
                     ->leftJoin('sucursals', 'nota_heladeros.id_sucursal', '=', 'sucursals.id')
-                    ->leftJoin('nota_heladero_estados as lestado', 'nota_heladeros.estado', '=', 'lestado.id')
                     ->select(
-                        "nota_heladeros.id",
-                        "nota_heladeros.user_id",
-                        "nota_heladeros.moneda_id",
-                        "nota_heladeros.id_sucursal",
-                        "nota_heladeros.monto",
-                        "nota_heladeros.pago",
-                        "nota_heladeros.debe",
-                        "nota_heladeros.ahorro",
-                        "nota_heladeros.cucharas",
-                        "nota_heladeros.conos",
-                        "nota_heladeros.placas_entregas",
-                        "nota_heladeros.placas_devueltas",
-                        "nota_heladeros.fecha_guardado",
-                        "nota_heladeros.fecha_apertura",
-                        "nota_heladeros.fecha_cierre",
-                        "nota_heladeros.id_usuario",
-                        "nota_heladeros.created_at",
-                        "nota_heladeros.updated_at",
-                        "nota_heladeros.parent_id",
-                        "heladero.documento as heladero_documento",
-                        "heladero.name as heladero_nombre",
-                        "creador.name",
-                        "sucursals.nombre",
-                        "lestado.nombre as estado"
+                        DB::raw("nota_heladeros.id as id"),
+                        DB::raw("nota_heladeros.user_id as user_id"),
+                        DB::raw("nota_heladeros.moneda_id as moneda_id"),
+                        DB::raw("nota_heladeros.id_sucursal as id_sucursal"),
+                        DB::raw("SUM(nota_heladeros.monto) as total_monto"),
+                        DB::raw("SUM(nota_heladeros.pago) as total_pago"),
+                        DB::raw("SUM(nota_heladeros.debe) as total_debe"),
+                        DB::raw("SUM(nota_heladeros.ahorro) as total_ahorro"),
+                        DB::raw("nota_heladeros.id_usuario as id_usuario"),
+                        DB::raw("nota_heladeros.parent_id as parent_id"),
+                        DB::raw("users.documento as heladero_documento"),
+                        DB::raw("users.name as heladero_nombre"),
+                        DB::raw("sucursals.nombre as nombre"),
                     );
+        */
 
-        if (!empty($documento) && $documento !="") {
-
-            $query->where('heladero.documento', $documento);
-        }
-        
-        if (!empty($nombre) && $nombre !="") {
-            
-            $query->where('heladero.name', 'LIKE', "%$nombre%");
-        }        
+        $queryExtra = "";
+        if (!empty($user_id) && $user_id !="") {            
+            //$query->where('nota_heladeros.user_id', $user_id);
+            $queryExtra.=" AND nota_heladeros.user_id = '$user_id' ";
+        }     
         
         if(!empty($estado) && $estado != 0){
-            $query->where('nota_heladeros.estado', '=', "$estado");
+            //$query->where('nota_heladeros.estado', '=', "$estado");
+            $queryExtra.=" AND nota_heladeros.estado = '$estado' ";
         }
+
+        $fecha1 = Carbon::parse($fecha_inicio);
+        $fecha2 = Carbon::parse($fecha_fin);
 
         if((!empty($fecha_inicio) && $fecha_inicio != 0) &&
-            (!empty($fecha_fin) && $fecha_fin != 0) ){
-            $query->whereBetween('nota_heladeros.created_at', [$fecha_inicio, $fecha_fin]);
+            (!empty($fecha_fin) && $fecha_fin != 0) &&
+            !$fecha1->eq($fecha2)){
+            //$query->whereBetween('nota_heladeros.created_at', [$fecha_inicio, $fecha_fin]);
+            $queryExtra.=" AND nota_heladeros.created_at BETWEEN '$fecha1' AND '$fecha2' ";
+        }else{
+            //$query->where('nota_heladeros.created_at', $fecha_inicio);
+            $fecha = Carbon::parse($fecha_inicio);
+
+            $queryExtra.=" AND DAY(nota_heladeros.created_at) = $fecha->day 
+                           AND MONTH(nota_heladeros.created_at) = $fecha->month 
+                           AND YEAR(nota_heladeros.created_at) = $fecha->year 
+                        ";
         }
+        
+        $query_string = "
+            SELECT 
+                users.id,
+                users.documento as heladero_documento, 
+                CONCAT(users.name,' ',users.apellidos )as heladero_nombre ,
+                SUM(nota_heladeros.monto) as monto,
+                SUM(nota_heladeros.pago) as pago,
+                SUM(nota_heladeros.debe) as debe,
+                SUM(nota_heladeros.ahorro) as ahorro,
+                SUM(nota_heladeros.monto+nota_heladeros.ahorro-nota_heladeros.pago) as deuda_total
+            FROM users
+                LEFT JOIN nota_heladeros ON nota_heladeros.user_id = users.id
+                LEFT JOIN moneda ON moneda.id = nota_heladeros.moneda_id
+                LEFT JOIN sucursals ON sucursals.id = nota_heladeros.id_sucursal
+            WHERE users.usuario_tipo = 7
+                $queryExtra
+            GROUP BY nota_heladeros.user_id            
+        ";
 
-        $data = $query->orderBy('nota_heladeros.created_at','desc')->get();
-
-        // dd($data);
-
-        $data = $data->toArray() ?? [];
+        
+        $data = DB::select($query_string);
 
         function convertDate($fecha = ''){
 
@@ -695,32 +714,13 @@ class NotaHeladeroController extends Controller
             $fecha = str_replace("/", "-", $fecha);
             return date("d-m-Y h:i a", strtotime($fecha));		    
         }
-
-        $n=0;
-        foreach($data as $key=>$item)
-        {
-            $created_at = $item["created_at"]??'';
-            $fecha_guardado = $item["fecha_guardado"]??'';
-            $fecha_apertura = $item["fecha_apertura"]??'';
-            $fecha_cierre = $item["fecha_cierre"]??'';
-
-            $fecha = str_replace("/", "-", $created_at);
-            $created_at = date("d-m-Y", strtotime($fecha));		    
-
-            $data[$key]["created_at"] = $created_at;
-            $data[$key]["fecha_guardado"] = convertDate($fecha_guardado);
-            $data[$key]["fecha_apertura"] = convertDate($fecha_apertura);
-            $data[$key]["fecha_cierre"] = convertDate($fecha_cierre);
-
-            unset($created_at , $fecha_guardado, $fecha_apertura, $fecha_cierre);
-            $n++;
-        }
         
         return response()->json([
 
             'data' => $data
 
-        ], 200);        
+        ], 200);
+
     }
 
     public function saveDateOperation(Request $request, $id) {
