@@ -159,10 +159,13 @@ class NotaHeladeroController extends Controller
         $nota_heladero->id_sucursal     = $sucursal_id;
         $nota_heladero->id_usuario      = $user_id;
         $nota_heladero->parent_id       = $parent_id;
-        $nota_heladero->monto           = $monto;
-        $nota_heladero->pago            = $pago;
-        $nota_heladero->debe            = $debe;
-        $nota_heladero->ahorro          = $ahorro;
+
+        if($estado_id == 1){
+            $nota_heladero->monto           = $monto;
+            $nota_heladero->pago            = $pago;
+            $nota_heladero->debe            = $debe;
+            $nota_heladero->ahorro          = $ahorro;
+        }
 
         //$nota_heladero->fecha_guardado  = $fecha_operacion;
         if($estado_id == 2) //re apertura
@@ -278,6 +281,7 @@ class NotaHeladeroController extends Controller
                     ->leftJoin('nota_heladero_estados as lestado', 'nota_heladeros.estado', '=', 'lestado.id')
                     ->select(
                         "nota_heladeros.id",
+                        "nota_heladeros.parent_id",
                         "nota_heladeros.user_id",
                         "nota_heladeros.moneda_id",
                         "nota_heladeros.id_sucursal",
@@ -416,9 +420,11 @@ class NotaHeladeroController extends Controller
         $nota_heladero->pago        = $pago;
         $nota_heladero->debe        = $debe;
         $nota_heladero->ahorro      = $ahorro;
-        $nota_heladero->parent_id   = $parent_id;
         $nota_heladero->cucharas    = 0;
         $nota_heladero->conos       = 0;
+        if($estado_id == 3){
+            $nota_heladero->parent_id   = $parent_id;
+        }
 
         $nota_heladero->save();
 
@@ -749,6 +755,6 @@ class NotaHeladeroController extends Controller
 
         $nota_heladero->save();
 
-        return $this->response->success($nota_heladero);        
+        return $this->show($id);
     }
 }
