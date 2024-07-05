@@ -390,4 +390,64 @@ class PersonasController extends Controller
             return false;
           }
     }
+
+    public function reporteAsistencia(Request $request){
+        $user_id = $request->input("user_id") ?? '';
+        $fecha_anio = $request->input("anio") ?? date("Y");
+        $fecha_mes = $request->input("mes") ?? date("m");
+        
+        $queryExtra = "";
+        if (!empty($user_id) && $user_id !="") $queryExtra.=" AND users.id = '$user_id' ";
+        
+        
+        $days_in_month = cal_days_in_month(CAL_GREGORIAN, $fecha_mes, $fecha_anio);
+        
+        $days = date("Y") == $fecha_anio &&  date("m") == $fecha_mes ? date("d") : $days_in_month;
+
+        $query_string = "
+            SELECT 
+            users.id,
+            users.documento,
+            CONCAT(users.name,' ',users.apellidos )as heladero_nombre,
+            (
+                SELECT count(*)
+                FROM  nota_heladeros as nota_heladeros
+                WHERE nota_heladeros.estado = 1
+                    AND MONTH(nota_heladeros.fecha_apertura) = $fecha_mes
+                    AND YEAR(nota_heladeros.fecha_apertura) = $fecha_anio
+                    AND nota_heladeros.user_id = users.id
+            ) as dias_asistidos,
+            (
+                $days  - (
+                    SELECT count(*)
+                    FROM  nota_heladeros as nota_heladeros
+                    WHERE nota_heladeros.estado = 1
+                        AND MONTH(nota_heladeros.fecha_apertura) = $fecha_mes
+                        AND YEAR(nota_heladeros.fecha_apertura) = $fecha_anio
+                        AND nota_heladeros.user_id = users.id
+                )
+            ) as dias_faltantes,
+            ROUND(
+                (
+                    ((
+                        SELECT count(*)
+                        FROM  nota_heladeros as nota_heladeros
+                        WHERE nota_heladeros.estado = 1
+                            AND MONTH(nota_heladeros.fecha_apertura) = $fecha_mes
+                            AND YEAR(nota_heladeros.fecha_apertura) = $fecha_anio
+                            AND nota_heladeros.user_id = users.id
+                    ) * 100) / $days )
+            , 2) as porcentaje_asistencia
+        FROM users
+        WHERE users.usuario_tipo = 7
+        $queryExtra
+        ORDER BY heladero_nombre;
+        ";
+
+        $data = \DB::select($query_string);
+
+        return response()->json([
+            'data' => $data,
+        ], 200);
+    }
 }

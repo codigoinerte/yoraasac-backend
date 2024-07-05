@@ -86,6 +86,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::resource('persona', PersonasController::class);
 
+    Route::get('reporte-heladero-asistencia', [PersonasController::class, 'reporteAsistencia']);
+
     Route::resource('producto', ProductosController::class);
 
     Route::get('stock', [StockController::class,'index']);
