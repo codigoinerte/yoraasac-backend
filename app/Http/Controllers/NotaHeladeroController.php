@@ -638,79 +638,91 @@ class NotaHeladeroController extends Controller
         
         $fecha_inicio = $request->input("fecha_inicio") ?? "";
         $fecha_fin = $request->input("fecha_fin") ?? date("Y-m-d");
-        
-        /*
-        $query = User::query()
-                    ->join('nota_heladeros as nota_heladeros', 'nota_heladeros.user_id', '=', 'users.id')
-                    ->leftJoin('users as creador', 'nota_heladeros.id_usuario', '=', 'creador.id')
-                    ->leftJoin('moneda', 'nota_heladeros.moneda_id', '=', 'moneda.id')
-                    ->leftJoin('sucursals', 'nota_heladeros.id_sucursal', '=', 'sucursals.id')
-                    ->select(
-                        DB::raw("nota_heladeros.id as id"),
-                        DB::raw("nota_heladeros.user_id as user_id"),
-                        DB::raw("nota_heladeros.moneda_id as moneda_id"),
-                        DB::raw("nota_heladeros.id_sucursal as id_sucursal"),
-                        DB::raw("SUM(nota_heladeros.monto) as total_monto"),
-                        DB::raw("SUM(nota_heladeros.pago) as total_pago"),
-                        DB::raw("SUM(nota_heladeros.debe) as total_debe"),
-                        DB::raw("SUM(nota_heladeros.ahorro) as total_ahorro"),
-                        DB::raw("nota_heladeros.id_usuario as id_usuario"),
-                        DB::raw("nota_heladeros.parent_id as parent_id"),
-                        DB::raw("users.documento as heladero_documento"),
-                        DB::raw("users.name as heladero_nombre"),
-                        DB::raw("sucursals.nombre as nombre"),
-                    );
-        */
+  
 
         $queryExtra = "";
         if (!empty($user_id) && $user_id !="") {            
-            //$query->where('nota_heladeros.user_id', $user_id);
             $queryExtra.=" AND nota_heladeros.user_id = '$user_id' ";
         }     
         
         if(!empty($estado) && $estado != 0){
-            //$query->where('nota_heladeros.estado', '=', "$estado");
             $queryExtra.=" AND nota_heladeros.estado = '$estado' ";
         }
 
         $fecha1 = Carbon::parse($fecha_inicio);
         $fecha2 = Carbon::parse($fecha_fin);
+        $fecha2->setTime(23, 59, 59);
+
+        switch ($estado) {
+            case 1: //cierre
+                $fecha_column = "nota_heladeros.fecha_cierre";
+            break;
+            
+            case 2: //reapertura
+                $fecha_column = "nota_heladeros.apertura";
+            break;
+            
+            case 3: //guardado
+                $fecha_column = "nota_heladeros.guardado";
+            break;
+            
+            default:
+                $fecha_column = "nota_heladeros.created_at";
+            break;
+        }
 
         if((!empty($fecha_inicio) && $fecha_inicio != 0) &&
             (!empty($fecha_fin) && $fecha_fin != 0) &&
             !$fecha1->eq($fecha2)){
-            //$query->whereBetween('nota_heladeros.created_at', [$fecha_inicio, $fecha_fin]);
-            $queryExtra.=" AND nota_heladeros.created_at BETWEEN '$fecha1' AND '$fecha2' ";
+            $queryExtra.=" AND $fecha_column BETWEEN '$fecha1' AND '$fecha2' ";
         }else{
-            //$query->where('nota_heladeros.created_at', $fecha_inicio);
             $fecha = Carbon::parse($fecha_inicio);
 
-            $queryExtra.=" AND DAY(nota_heladeros.created_at) = $fecha->day 
-                           AND MONTH(nota_heladeros.created_at) = $fecha->month 
-                           AND YEAR(nota_heladeros.created_at) = $fecha->year 
+            $queryExtra.=" AND DAY($fecha_column) = $fecha->day 
+                           AND MONTH($fecha_column) = $fecha->month 
+                           AND YEAR($fecha_column) = $fecha->year 
                         ";
         }
         
         $query_string = "
-            SELECT 
+            SELECT
                 users.id,
                 users.documento as heladero_documento, 
-                CONCAT(users.name,' ',users.apellidos )as heladero_nombre ,
-                SUM(nota_heladeros.monto) as monto,
-                SUM(nota_heladeros.pago) as pago,
-                SUM(nota_heladeros.debe) as debe,
-                SUM(nota_heladeros.ahorro) as ahorro,
-                SUM(nota_heladeros.monto+nota_heladeros.ahorro-nota_heladeros.pago) as deuda_total
+                CONCAT(users.name,' ',users.apellidos )as heladero_nombre,
+                (
+                    SELECT SUM(nota_heladeros.monto)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as monto,
+                (
+                    SELECT SUM(nota_heladeros.pago)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as pago,
+                (
+                    SELECT SUM(nota_heladeros.debe)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as debe,
+                (
+                    SELECT SUM(nota_heladeros.ahorro)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as ahorro,
+                (
+                    SELECT SUM(nota_heladeros.monto+nota_heladeros.ahorro-nota_heladeros.pago)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as deuda_total
             FROM users
-                LEFT JOIN nota_heladeros ON nota_heladeros.user_id = users.id
-                LEFT JOIN moneda ON moneda.id = nota_heladeros.moneda_id
-                LEFT JOIN sucursals ON sucursals.id = nota_heladeros.id_sucursal
             WHERE users.usuario_tipo = 7
-                $queryExtra
-            GROUP BY nota_heladeros.user_id            
         ";
 
-        
         $data = DB::select($query_string);
 
         function convertDate($fecha = ''){
