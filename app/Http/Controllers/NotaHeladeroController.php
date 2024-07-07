@@ -40,6 +40,7 @@ class NotaHeladeroController extends Controller
                     ->leftJoin('sucursals', 'nota_heladeros.id_sucursal', '=', 'sucursals.id')
                     ->leftJoin('nota_heladero_estados as lestado', 'nota_heladeros.estado', '=', 'lestado.id')
                     ->select(
+                        "nota_heladeros.codigo",
                         "nota_heladeros.id",
                         "nota_heladeros.user_id",
                         "nota_heladeros.moneda_id",
@@ -280,6 +281,7 @@ class NotaHeladeroController extends Controller
                     ->leftJoin('sucursals', 'nota_heladeros.id_sucursal', '=', 'sucursals.id')
                     ->leftJoin('nota_heladero_estados as lestado', 'nota_heladeros.estado', '=', 'lestado.id')
                     ->select(
+                        "nota_heladeros.codigo",
                         "nota_heladeros.id",
                         "nota_heladeros.parent_id",
                         "nota_heladeros.user_id",
