@@ -140,6 +140,7 @@ class NotaHeladeroController extends Controller
         $productos = $request->input("productos")??[];
         $parent_id = $request->input("parent_id")??0;
 
+        $deuda_anterior = $request->input("deuda_anterior")??0;
         $monto = $request->input("monto")??0;
         $pago = $request->input("pago")??0;
         $debe = $request->input("debe")??0;
@@ -166,6 +167,7 @@ class NotaHeladeroController extends Controller
             $nota_heladero->pago            = $pago;
             $nota_heladero->debe            = $debe;
             $nota_heladero->ahorro          = $ahorro;
+            $nota_heladero->deuda_anterior  = $deuda_anterior;
         }
 
         //$nota_heladero->fecha_guardado  = $fecha_operacion;
@@ -287,6 +289,7 @@ class NotaHeladeroController extends Controller
                         "nota_heladeros.user_id",
                         "nota_heladeros.moneda_id",
                         "nota_heladeros.id_sucursal",
+                        "nota_heladeros.deuda_anterior",
                         "nota_heladeros.monto",
                         "nota_heladeros.pago",
                         "nota_heladeros.debe",
@@ -395,6 +398,7 @@ class NotaHeladeroController extends Controller
         $productos = $request->input("productos")??[];
         $parent_id = $request->input("parent_id")??0;
 
+        $deuda_anterior = $request->input("deuda_anterior")??0;
         $monto = $request->input("monto")??0;
         $pago = $request->input("pago")??0;
         $debe = $request->input("debe")??0;
@@ -418,12 +422,13 @@ class NotaHeladeroController extends Controller
             $nota_heladero->fecha_cierre = $fecha_operacion;
         }
 
-        $nota_heladero->monto       = $monto;
-        $nota_heladero->pago        = $pago;
-        $nota_heladero->debe        = $debe;
-        $nota_heladero->ahorro      = $ahorro;
-        $nota_heladero->cucharas    = 0;
-        $nota_heladero->conos       = 0;
+        $nota_heladero->deuda_anterior  = $deuda_anterior;
+        $nota_heladero->monto           = $monto;
+        $nota_heladero->pago            = $pago;
+        $nota_heladero->debe            = $debe;
+        $nota_heladero->ahorro          = $ahorro;
+        $nota_heladero->cucharas        = 0;
+        $nota_heladero->conos           = 0;
         if($estado_id == 3){
             $nota_heladero->parent_id   = $parent_id;
         }
