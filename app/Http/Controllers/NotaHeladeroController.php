@@ -647,7 +647,7 @@ class NotaHeladeroController extends Controller
         $fecha_fin = $request->input("fecha_fin") ?? date("Y-m-d");
   
 
-        $queryExtra = "";
+        $queryExtra = $queryExtraAsistencia = "";
         if (!empty($user_id) && $user_id !="") {            
             $queryExtra.=" AND nota_heladeros.user_id = '$user_id' ";
         }     
@@ -657,8 +657,7 @@ class NotaHeladeroController extends Controller
         }
 
         $fecha1 = Carbon::parse($fecha_inicio);
-        $fecha2 = Carbon::parse($fecha_fin);
-        $fecha2->setTime(23, 59, 59);
+        $fecha2 = Carbon::parse($fecha_fin);        
 
         switch ($estado) {
             case 1: //cierre
@@ -678,10 +677,18 @@ class NotaHeladeroController extends Controller
             break;
         }
 
+        $days = 1;
+
         if((!empty($fecha_inicio) && $fecha_inicio != 0) &&
             (!empty($fecha_fin) && $fecha_fin != 0) &&
             !$fecha1->eq($fecha2)){
+
+            $fecha2->setTime(23, 59, 59);
+
             $queryExtra.=" AND $fecha_column BETWEEN '$fecha1' AND '$fecha2' ";
+            $queryExtraAsistencia.=" AND asistencias.fecha BETWEEN '$fecha1' AND '$fecha2' ";
+
+            $days = $fecha1->diffInDays($fecha2);
         }else{
             $fecha = Carbon::parse($fecha_inicio);
 
@@ -689,6 +696,10 @@ class NotaHeladeroController extends Controller
                            AND MONTH($fecha_column) = $fecha->month 
                            AND YEAR($fecha_column) = $fecha->year 
                         ";
+
+            $queryExtraAsistencia.="AND DAY(asistencias.fecha) = $fecha->day 
+                                    AND MONTH(asistencias.fecha) = $fecha->month 
+                                    AND YEAR(asistencias.fecha) = $fecha->year ";
         }
         
         $query_string = "
@@ -725,7 +736,20 @@ class NotaHeladeroController extends Controller
                     FROM nota_heladeros
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
-                ) as deuda_total
+                ) as deuda_total,
+                (
+                    SELECT count(*)
+                    FROM  asistencias as asistencias
+                    WHERE asistencias.user_id = users.id $queryExtraAsistencia
+                ) as dias_asistidos,
+                ROUND(
+                    (
+                        ((
+                            SELECT count(*)
+                            FROM  asistencias as asistencias
+                            WHERE asistencias.user_id = users.id $queryExtraAsistencia
+                        ) * 100) / $days )
+                , 2) as porcentaje_asistencia
             FROM users
             WHERE users.usuario_tipo = 7
         ";
