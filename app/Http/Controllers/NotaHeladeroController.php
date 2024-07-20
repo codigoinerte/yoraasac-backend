@@ -95,16 +95,6 @@ class NotaHeladeroController extends Controller
         $data = $nota_heladero->toArray()["data"] ?? [];
 
         $n=0;
-        foreach($data as $item)
-        {
-            $created_at = $item["created_at"]??'';
-
-            $fecha = str_replace("/", "-", $created_at);
-            $newDate = date("d-m-Y", strtotime($fecha));		    
-
-            $data[$n]["created_at"] = $newDate;
-            $n++;
-        }
         
         return response()->json([
 
