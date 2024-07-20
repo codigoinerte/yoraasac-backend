@@ -18,12 +18,23 @@ return new class extends Migration
             AFTER UPDATE ON nota_heladeros
             FOR EACH ROW
             BEGIN
+
+                DECLARE existing_record INT;
+
+                SET @existing_record := (SELECT COUNT(*) FROM asistencias WHERE nota_id = NEW.id AND user_id  = NEW.user_id);
+                
                 IF OLD.fecha_apertura <> NEW.fecha_apertura THEN
-                    INSERT INTO asistencias (user_id, fecha)
-                    VALUES (NEW.user_id, NOW());
+                    
+                    INSERT INTO asistencias (user_id, nota_id, fecha)
+                    VALUES (NEW.user_id, NEW.id, NOW());
+
+                ELSEIF OLD.fecha_cierre IS NULL AND OLD.fecha_cierre <> NEW.fecha_cierre AND existing_record = 0 THEN
+                                                            
+                    INSERT INTO asistencias (user_id, nota_id, fecha)
+                    VALUES (NEW.user_id, NEW.id, NOW());                    
+
                 END IF;
-            END
-        ');
+            END;');
        
         DB::unprepared('
             CREATE TRIGGER after_fecha_apertura_insert
@@ -31,8 +42,8 @@ return new class extends Migration
             FOR EACH ROW
             BEGIN
                 IF NEW.estado <> 4 THEN
-                    INSERT INTO asistencias (user_id, fecha)
-                    VALUES (NEW.user_id, NOW());
+                    INSERT INTO asistencias (user_id, nota_id, fecha)
+                    VALUES (NEW.user_id, NEW.id, NOW());
                 END IF;
             END
         ');
