@@ -692,6 +692,11 @@ class NotaHeladeroController extends Controller
                                     AND YEAR(asistencias.fecha) = $fecha->year ";
         }
         
+        $queryAsistencia = "(
+            SELECT count(*)
+            FROM  asistencias as asistencias
+            WHERE asistencias.user_id = users.id $queryExtraAsistencia
+        )";
         $query_string = "
             SELECT
                 users.id,
@@ -702,7 +707,26 @@ class NotaHeladeroController extends Controller
                     FROM nota_heladeros
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
-                ) as monto,
+                ) as vendido,
+                (
+                    SELECT SUM(nota_heladeros.deuda_anterior)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as deuda_pagada,
+                (
+                    (
+                        SELECT SUM(nota_heladeros.monto)
+                        FROM nota_heladeros
+                        WHERE nota_heladeros.user_id = users.id
+                        $queryExtra
+                    )+(
+                        SELECT SUM(nota_heladeros.deuda_anterior)
+                        FROM nota_heladeros
+                        WHERE nota_heladeros.user_id = users.id
+                        $queryExtra
+                    )
+                ) as total_pagar,
                 (
                     SELECT SUM(nota_heladeros.pago)
                     FROM nota_heladeros
@@ -732,14 +756,7 @@ class NotaHeladeroController extends Controller
                     FROM  asistencias as asistencias
                     WHERE asistencias.user_id = users.id $queryExtraAsistencia
                 ) as dias_asistidos,
-                ROUND(
-                    (
-                        ((
-                            SELECT count(*)
-                            FROM  asistencias as asistencias
-                            WHERE asistencias.user_id = users.id $queryExtraAsistencia
-                        ) * 100) / $days )
-                , 2) as porcentaje_asistencia
+                ROUND( (( $queryAsistencia  * 100) / $days) , 2) as porcentaje_asistencia
             FROM users
             WHERE users.usuario_tipo = 7
         ";
