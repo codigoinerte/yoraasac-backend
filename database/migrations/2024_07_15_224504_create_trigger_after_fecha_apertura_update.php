@@ -20,20 +20,27 @@ return new class extends Migration
             BEGIN
 
                 DECLARE existing_record INT;
+                SET existing_record = 0;
 
-                SET @existing_record := (SELECT COUNT(*) FROM asistencias WHERE nota_id = NEW.id AND user_id  = NEW.user_id);
-                
+                SELECT COUNT(*) INTO existing_record 
+                FROM asistencias 
+                WHERE nota_id = OLD.id 
+                    AND user_id  = OLD.user_id
+                    AND DAY(fecha) = DAY(NOW())
+                    AND MONTH(fecha) = MONTH(NOW())
+                    AND YEAR(fecha) = YEAR(NOW());
+
+                -- Check if fecha_apertura has changed
                 IF OLD.fecha_apertura <> NEW.fecha_apertura THEN
-                    
                     INSERT INTO asistencias (user_id, nota_id, fecha)
                     VALUES (NEW.user_id, NEW.id, NOW());
-
-                ELSEIF OLD.fecha_cierre IS NULL AND OLD.fecha_cierre <> NEW.fecha_cierre AND existing_record = 0 THEN
-                                                            
+                
+                -- Check if fecha_cierre has changed
+                ELSEIF OLD.fecha_cierre <> NEW.fecha_cierre OR (OLD.fecha_cierre IS NULL AND NEW.fecha_cierre IS NOT NULL) THEN
                     INSERT INTO asistencias (user_id, nota_id, fecha)
-                    VALUES (NEW.user_id, NEW.id, NOW());                    
-
+                    VALUES (NEW.user_id, NEW.id, NOW());
                 END IF;
+                
             END;');
        
         DB::unprepared('
@@ -41,7 +48,7 @@ return new class extends Migration
             AFTER INSERT ON nota_heladeros
             FOR EACH ROW
             BEGIN
-                IF NEW.estado <> 4 THEN
+                IF NEW.estado = 2 THEN
                     INSERT INTO asistencias (user_id, nota_id, fecha)
                     VALUES (NEW.user_id, NEW.id, NOW());
                 END IF;
