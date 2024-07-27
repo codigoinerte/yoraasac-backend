@@ -36,7 +36,7 @@ return new class extends Migration
                     VALUES (NEW.user_id, NEW.id, NOW());
                 
                 -- Check if fecha_cierre has changed
-                ELSEIF OLD.fecha_cierre <> NEW.fecha_cierre OR (OLD.fecha_cierre IS NULL AND NEW.fecha_cierre IS NOT NULL) THEN
+                ELSEIF (OLD.fecha_cierre <> NEW.fecha_cierre OR (OLD.fecha_cierre IS NULL AND NEW.fecha_cierre IS NOT NULL)) AND existing_record = 0 THEN
                     INSERT INTO asistencias (user_id, nota_id, fecha)
                     VALUES (NEW.user_id, NEW.id, NOW());
                 END IF;
