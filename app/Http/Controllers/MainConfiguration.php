@@ -35,6 +35,7 @@ class MainConfiguration extends Controller
         $celular = $sistemas->celular ?? '';    
         $igv = $sistemas->igv ?? 1;
         $logo = $sistemas->logo ?? '';
+        $cargo_baterias = $sistemas->cargo_baterias ?? 0;
 
         $response = [
             "ruc" => $ruc,
@@ -47,6 +48,7 @@ class MainConfiguration extends Controller
             "contactos"=> $contactos,
             "igvs"=> $igvs,
             "logo"=> $logo,
+            "cargo_baterias" => $cargo_baterias
         ];
 
         
@@ -109,6 +111,7 @@ class MainConfiguration extends Controller
         $celular = $request->input("celular") ?? '';
         $igv = $request->input("igv") ?? '';
         $logo = $request->input("logo") ?? '';
+        $cargo_baterias = $request->input("cargo_baterias") ?? '';
         $contactos = $request->input("contactos") ?? [];
 
         $sistema = sistema::find($id);
@@ -124,6 +127,7 @@ class MainConfiguration extends Controller
         $sistema->email_empresa = $email_empresa;
         $sistema->celular = $celular;
         $sistema->igv = $igv;
+        $sistema->cargo_baterias = $cargo_baterias;
         $sistema->logo = $logo;
 
         $sistema->save();
@@ -181,6 +185,7 @@ class MainConfiguration extends Controller
             "contactos"=> $contactos,
             "igvs"=> $igvs,
             "logo"=> $logo,
+            "cargo_baterias"=> $cargo_baterias,
         ];
 
         return response()->json([

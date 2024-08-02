@@ -59,6 +59,7 @@ class NotaHeladeroController extends Controller
                         "nota_heladeros.id_usuario",
                         "nota_heladeros.created_at",
                         "nota_heladeros.updated_at",
+                        "nota_heladeros.cargo_baterias",
                         "heladero.documento as heladero_documento",
                         "heladero.name as heladero_nombre",
                         "creador.name",
@@ -131,6 +132,7 @@ class NotaHeladeroController extends Controller
         $parent_id = $request->input("parent_id")??0;
 
         $deuda_anterior = $request->input("deuda_anterior")??0;
+        $cargo_baterias = $request->input("cargo_baterias")??0;
         $monto = $request->input("monto")??0;
         $pago = $request->input("pago")??0;
         $debe = $request->input("debe")??0;
@@ -158,6 +160,7 @@ class NotaHeladeroController extends Controller
             $nota_heladero->debe            = $debe;
             $nota_heladero->ahorro          = $ahorro;
             $nota_heladero->deuda_anterior  = $deuda_anterior;
+            $nota_heladero->cargo_baterias  = $cargo_baterias;
         }
 
         //$nota_heladero->fecha_guardado  = $fecha_operacion;
@@ -280,6 +283,7 @@ class NotaHeladeroController extends Controller
                         "nota_heladeros.moneda_id",
                         "nota_heladeros.id_sucursal",
                         "nota_heladeros.deuda_anterior",
+                        "nota_heladeros.cargo_baterias",
                         "nota_heladeros.monto",
                         "nota_heladeros.pago",
                         "nota_heladeros.debe",
@@ -389,6 +393,7 @@ class NotaHeladeroController extends Controller
         $parent_id = $request->input("parent_id")??0;
 
         $deuda_anterior = $request->input("deuda_anterior")??0;
+        $cargo_baterias = $request->input("cargo_baterias")??0;
         $monto = $request->input("monto")??0;
         $pago = $request->input("pago")??0;
         $debe = $request->input("debe")??0;
@@ -413,6 +418,7 @@ class NotaHeladeroController extends Controller
         }
 
         $nota_heladero->deuda_anterior  = $deuda_anterior;
+        $nota_heladero->cargo_baterias  = $cargo_baterias;
         $nota_heladero->monto           = $monto;
         $nota_heladero->pago            = $pago;
         $nota_heladero->debe            = $debe;
