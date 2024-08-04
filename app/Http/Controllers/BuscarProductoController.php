@@ -44,6 +44,7 @@ class BuscarProductoController extends Controller
                             "productos.unidad_id",
                             "productos.moneda_id",
                             "productos.igv_id",
+                            "productos.cantidad_caja",
                             "estados.estado",
                             "moneda.moneda",
                             "productos.created_at",
