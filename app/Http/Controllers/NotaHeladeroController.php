@@ -253,6 +253,7 @@ class NotaHeladeroController extends Controller
         $nota_heladero->codigo = $numero_documento;
         $nota_heladero->save();
         
+        if($estado_id != 3)
         $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $numero_documento);
         
         //return $this->response->success($nota_heladero);
