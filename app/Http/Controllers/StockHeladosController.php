@@ -144,12 +144,16 @@ class StockHeladosController extends Controller
             {
                 $codigo = $item["codigo"]??'';                
                 $cantidad = $item["cantidad"]??0;
+                $caja = $item["caja"]??0;
+                $caja_cantidad = $item["caja_cantidad"]??0;
 
                 $newDetail = new StockHeladosDetail();
 
                 $newDetail->codigo = $codigo;
                 $newDetail->stock_helados_id = $idStock;
                 $newDetail->cantidad = $cantidad;
+                $newDetail->caja = $caja;
+                $newDetail->caja_cantidad = $caja_cantidad;
 
                 $newDetail->save();
 
@@ -185,6 +189,8 @@ class StockHeladosController extends Controller
                             "stock_helados_detail.cantidad",
                             "stock_helados_detail.updated_at",
                             "stock_helados_detail.created_at",
+                            "stock_helados_detail.caja",
+                            "stock_helados_detail.caja_cantidad",
                             "productos.nombre as producto"
                         )
                         ->where('stock_helados_detail.stock_helados_id', $id)
@@ -241,20 +247,27 @@ class StockHeladosController extends Controller
 
         $detalle = [];
 
-        StockHeladosDetail::where('stock_helados_id', $id)->delete();
+        //StockHeladosDetail::where('stock_helados_id', $id)->delete();
 
         if(count($array_detalle) > 0)
         {
             foreach($array_detalle as $item)
             {
+                $id = $item["id"]??null;
                 $codigo = $item["codigo"]??'';                
                 $cantidad = $item["cantidad"]??0;
+                $caja = $item["caja"]??0;
+                $caja_cantidad = $item["caja_cantidad"]??0;
 
-                $newDetail = new StockHeladosDetail();
+                if(!$id) break;
+
+                $newDetail = StockHeladosDetail::find($id);
 
                 $newDetail->codigo = $codigo;
                 $newDetail->stock_helados_id = $id;
                 $newDetail->cantidad = $cantidad;
+                $newDetail->caja = $caja;
+                $newDetail->caja_cantidad = $caja_cantidad;
 
                 $newDetail->save();
 
