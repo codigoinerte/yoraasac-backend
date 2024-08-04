@@ -55,7 +55,7 @@ class StockHistorialHelado extends Controller
     public function detalle_stock_helado($idstockhelado = null){
         
         if($idstockhelado == 0 || $idstockhelado == null) return new stdClass();
-        $query =  "SELECT shd.id, shd.codigo, pro.nombre, shd.cantidad
+        $query =  "SELECT shd.id, shd.codigo, pro.nombre, shd.cantidad, shd.caja, shd.caja_cantidad
                    FROM stock_helados_detail shd
                    LEFT JOIN productos pro ON pro.codigo = shd.codigo 
                    WHERE shd.stock_helados_id = $idstockhelado";
