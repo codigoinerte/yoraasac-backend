@@ -108,6 +108,7 @@ class StockHeladosController extends Controller
         $tipo_documento_id = $request->input("tipo_documento_id") ?? 0;
         $fecha_movimiento = $request->input("fecha_movimiento") ?? '';
         $numero_documento = $request->input("numero_documento") ?? '';
+        $image_file = $request->input("image_file") ?? '';
 
         $array_detalle = $request->input("detalle")??[];
 
@@ -122,7 +123,8 @@ class StockHeladosController extends Controller
         $stock->movimientos_id = $movimientos_id;
         $stock->tipo_documento_id = $tipo_documento_id;
         $stock->numero_documento = $numero_documento;
-        $stock->fecha_movimiento = $fecha_movimiento;        
+        $stock->fecha_movimiento = $fecha_movimiento;
+        $stock->imagen = $image_file;
         $stock->user_id = $user_creador;
         
         $stock->save();
@@ -235,6 +237,7 @@ class StockHeladosController extends Controller
         $tipo_documento_id = $request->input("tipo_documento_id") ?? 0;
         $fecha_movimiento = $request->input("fecha_movimiento") ?? '';
         $numero_documento = $request->input("numero_documento") ?? '';
+        $image_file = $request->input("image_file") ?? '';
 
         $array_detalle = $request->input("detalle")??[];
 
@@ -242,6 +245,7 @@ class StockHeladosController extends Controller
         $stock->tipo_documento_id = $tipo_documento_id;
         $stock->numero_documento = $numero_documento;
         $stock->fecha_movimiento = $fecha_movimiento;        
+        $stock->imagen = $image_file;        
         
         $stock->save();        
 
@@ -253,16 +257,16 @@ class StockHeladosController extends Controller
         {
             foreach($array_detalle as $item)
             {
-                $id = $item["id"]??null;
+                $idDetail = $item["id"]??null;
                 $codigo = $item["codigo"]??'';                
                 $cantidad = $item["cantidad"]??0;
                 $caja = $item["caja"]??0;
                 $caja_cantidad = $item["caja_cantidad"]??0;
 
-                if(!$id) break;
+                if(empty($idDetail)) break;
 
-                $newDetail = StockHeladosDetail::find($id);
-
+                $newDetail = StockHeladosDetail::find($idDetail);
+                
                 $newDetail->codigo = $codigo;
                 $newDetail->stock_helados_id = $id;
                 $newDetail->cantidad = $cantidad;
@@ -309,12 +313,12 @@ class StockHeladosController extends Controller
         $movimientos_id = $movimiento;
         if($tipo == "nota"){
 
-            if($estado == 2){
+            if($estado == 2 || $estado == 4){
                 /* reapertura los helados seran agregados al usuario y saldran de almacen : salida*/
                 $tipo_documento_id = 4;
                 $movimientos_id = 2;
             }
-            else if($estado == 3 || $estado == 4){
+            else if($estado == 3){
                 /* guardado de helados del heladero vuelven al almacen y al congelador para el dia siguiente: entrada*/
                 $tipo_documento_id = 5;
                 $movimientos_id = 1;
@@ -335,6 +339,12 @@ class StockHeladosController extends Controller
             $movimientos_id = 1;
         }else if($tipo == "nota_venta"){
             $tipo_documento_id = 7;
+            $movimientos_id = 2;
+        }else if($tipo == "reajuste_ingreso"){
+            $tipo_documento_id = 6;
+            $movimientos_id = 1;
+        }else if($tipo == "reajuste_salida"){
+            $tipo_documento_id = 6;
             $movimientos_id = 2;
         }else{            
             $tipo_documento_id = 6;
@@ -391,5 +401,46 @@ class StockHeladosController extends Controller
         $stock["detalle"] = $detalle;        
 
         return $this->response->success($stock);
+    }
+
+    public function deleteImage($imagen = ""){
+        
+        $imagen = request()->input("imagen") ?? $imagen;
+
+        if($imagen == '') return false;
+        
+        $image_path = storage_path('app/public/fotos/').$imagen;
+        
+        if(\File::exists($image_path)){
+            \File::delete($image_path);
+            return true;
+          }else{
+            return false;
+          }
+    }
+
+    public function updateDeleteImagen(Request $request, $id)
+    {
+        $stock = StockHelados::find($id);
+
+        if(empty($stock)){
+            return $this->response->error("No se envio un id valido");
+        }
+
+        $imagen = $request->input("imagen");
+
+        if($imagen !='' && $stock->imagen == $imagen){
+
+            $respuesta = $this->deleteImage($imagen);
+
+            if($respuesta == false) return $this->response->error("La foto enviada no existe");
+            
+            $stock->imagen = "";
+
+        };
+
+        $stock->save();
+
+        return $this->response->success($stock, "El registro fue actualizado correctamente");
     }
 }
