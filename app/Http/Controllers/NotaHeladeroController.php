@@ -240,6 +240,12 @@ class NotaHeladeroController extends Controller
                         "codigo" => $codigo,
                         "cantidad" => $vendido
                     ]);
+                }else if($estado_id == 4){
+                    /*salida*/
+                    array_push($array_detalle, [
+                        "codigo" => $codigo,
+                        "cantidad" => $pedido
+                    ]);
                 }
             }
         }
@@ -253,7 +259,7 @@ class NotaHeladeroController extends Controller
         $nota_heladero->codigo = $numero_documento;
         $nota_heladero->save();
         
-        if($estado_id != 3)
+        if($estado_id  == 2)
         $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $numero_documento);
         
         //return $this->response->success($nota_heladero);
@@ -499,7 +505,7 @@ class NotaHeladeroController extends Controller
                     /* re apertura :  salida */
                     array_push($array_detalle, [
                         "codigo" => $codigo,
-                        "cantidad" => $devolucion + $pedido
+                        "cantidad" => $pedido
                     ]);
                     
                 }else if($estado_id == 3){
@@ -514,12 +520,18 @@ class NotaHeladeroController extends Controller
                         "codigo" => $codigo,
                         "cantidad" => $vendido
                     ]);
+                }else if($estado_id == 4){
+                    /*ingreso*/
+                    array_push($array_detalle, [
+                        "codigo" => $codigo,
+                        "cantidad" => $pedido
+                    ]);
                 }
             }
         }
 
-        
-        $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $nota_heladero->codigo);
+        if($estado_id  == 2)
+            $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $nota_heladero->codigo);
         
         return $this->show($id);
         //return $this->response->success($nota_heladero);
@@ -597,6 +609,7 @@ class NotaHeladeroController extends Controller
                                     LEFT JOIN nota_heladeros nh ON nh.id = nd.nota_heladeros_id
                                     WHERE nd.codigo = nota_heladero_detalle.codigo AND nh.parent_id = nota_heladero_detalle.nota_heladeros_id
                                     ) as devolucion_today'))
+                                ->addSelect(DB::raw("CheckStock(productos.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
                                 ->orderBy('nota_heladero_detalle.codigo','asc')
                                 ->get();
@@ -627,12 +640,42 @@ class NotaHeladeroController extends Controller
 
     public function listPublicProducts(Request $request)
     {
-        $producto = Productos::query()
-                    ->where("estados_id", "=", 1)
-                    ->orderBy('codigo','asc')
-                    ->get();
+
+        $query_string = "SELECT 
+                                prod.id, 
+                                prod.codigo, 
+                                prod.nombre, 
+                                prod.orden, 
+                                prod.stock_alerta, 
+                                prod.precio_venta, 
+                                prod.descuento, 
+                                prod.destacado, 
+                                prod.estados_id, 
+                                prod.unspsc_id, 
+                                prod.marcas_id, 
+                                prod.unidad_id, 
+                                prod.moneda_id, 
+                                prod.igv_id, 
+                                prod.created_at, 
+                                prod.updated_at, 
+                                prod.heladero_precio_venta, 
+                                prod.heladero_descuento, 
+                                prod.cantidad_caja, 
+                                prod.proveedor_precio, 
+                                prod.is_litro,
+                                CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) as stock_alert_input
+                         FROM productos as prod
+                         WHERE estados_id = 1 
+                         ORDER BY codigo ASC";
+
+        $data = DB::select($query_string);
                     
-        return $this->response->success($producto);
+        return $this->response->success($data);
+        /*
+            0: alerta minima hay stock
+            1: alerta maxima no hay stock 
+            2: alerta media el stock aun es existente pero en baja cantidad
+        */
     }
 
     public function reporte(Request $request)
