@@ -292,8 +292,11 @@ class StockHeladosController extends Controller
      */
     public function destroy($id)
     {
-        $stock = StockHelados::find($id);
+        return $this->eliminar_stock($id);
+    }
 
+    public function eliminar_stock($id){
+        $stock = StockHelados::find($id);      
         if(empty($stock)){
             return $this->response->error("No se envio un id valido");
         }
@@ -308,7 +311,7 @@ class StockHeladosController extends Controller
         return $this->response->success($stock, "El registro fue eliminado correctamente");
     }
 
-    public function createMovimientoStock($tipo, $estado, $iddoc, $iduser, $array_detalle = [], $movimiento = 2, $numero_documento){
+    public function createMovimientoStock($tipo, $estado, $iddoc, $iduser, $array_detalle = [], $movimiento = 2, $numero_documento, $isReturn = true){
 
         $movimientos_id = $movimiento;
         if($tipo == "nota"){
@@ -400,7 +403,51 @@ class StockHeladosController extends Controller
 
         $stock["detalle"] = $detalle;        
 
-        return $this->response->success($stock);
+        return $isReturn ? $this->response->success($stock) : $stock;
+    }
+
+    public function updateMovimientoStock($array_detalle = [], $id = 0, $movimiento = null){
+        if($id == 0 || $movimiento == null) return null;
+        if(!empty($movimiento)){
+            $id = StockHelados::where("codigo_movimiento", $movimiento)
+                ->value("id");
+
+            if(empty($response)) return null;
+
+        }
+
+        foreach($array_detalle as $item){
+            $codigo = $item["codigo"]??'';                
+            $cantidad = $item["cantidad"]??0;
+
+            $detail = StockHeladosDetail::where("codigo", $codigo)
+                                            ->where("stock_helados_id", $id)
+                                            ->first();
+            if($detail){
+                $detail->cantidad = $cantidad;
+                $detail->save();
+            }
+        }
+    }
+
+    public function getIdFromDocumento($numero_documento, $tipo_documento_id = null, $movimientos_id = null){
+        $query = StockHelados::where("numero_documento", $numero_documento);
+
+        if(!empty($tipo_documento_id)){
+            $query->where("tipo_documento_id", $tipo_documento_id);
+        }
+
+        if(!empty($movimientos_id)){
+            $query->where("movimientos_id", $movimientos_id);
+        }
+
+        $id = $query->value("id");
+    }
+
+    public function getStockHeladosByCodigo($codigo = null){
+        if(empty($codigo)) return null;
+
+        return StockHelados::where("codigo_movimiento", $codigo)->first();
     }
 
     public function deleteImage($imagen = ""){
