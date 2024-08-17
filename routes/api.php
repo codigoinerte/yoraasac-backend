@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Http\Controllers\ReajusteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -101,6 +102,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('stock-bateria', StockBateriasController::class);
 
     Route::resource('stock-barquillos', StockBarquillosController::class);
+
+    Route::resource('reajuste', ReajusteController::class);
 
     Route::resource('unspsc', UnspscController::class);
     Route::resource('estado', EstadosController::class);
