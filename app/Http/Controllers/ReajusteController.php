@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\reajuste;
 use Illuminate\Http\Request;
 use App\Models\reajustes_detail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class ReajusteController extends Controller
@@ -114,12 +115,15 @@ class ReajusteController extends Controller
         }
 
         $reajuste->save();
+        
+        /* reajuste detail */
+        $reajuste = reajuste::find($reajuste->id);
 
-        $reajuste->detail = $detail;
+        $detalle = $this->getReajustesDetail($reajuste->id);
 
-        return response()->json([
-            "data" => $reajuste
-        ], 200);
+        $reajuste->detalle = $detalle;
+
+        return $this->response->success($reajuste, "El registro fue encontrado");
     }
 
     /**
@@ -132,13 +136,11 @@ class ReajusteController extends Controller
     {
         $reajuste = reajuste::find($reajuste->id);
 
-        $detalle = reajustes_detail::where("reajuste_id", $reajuste->id)->get();
+        $detalle = $this->getReajustesDetail($reajuste->id);
 
         $reajuste->detalle = $detalle;
 
-        return response()->json([
-            "data" => $reajuste
-        ], 200);
+        return $this->response->success($reajuste, "El registro fue encontrado");
 
     }
 
@@ -181,6 +183,8 @@ class ReajusteController extends Controller
                 $reajuste_id = $reajuste->id;
 
                 $new_reajustes_detail = reajustes_detail::find($idDetail);
+                
+                if(empty($new_reajustes_detail)) continue;
 
                 $new_reajustes_detail->codigo = $codigo;
                 $new_reajustes_detail->cantidad_ingreso = $cantidad_ingreso;
@@ -233,9 +237,15 @@ class ReajusteController extends Controller
             $reajuste->codigo_salida = $stock_salida->codigo_movimiento;
         }
 
-        return response()->json([
-            "data" => $reajuste
-        ], 200);
+        
+        /* reajuste detail */
+        $reajuste = reajuste::find($reajuste->id);
+
+        $detalle = $this->getReajustesDetail($reajuste->id);
+
+        $reajuste->detalle = $detalle;
+
+        return $this->response->success($reajuste, "El registro fue encontrado");;
     }
 
     /**
@@ -277,5 +287,25 @@ class ReajusteController extends Controller
         reajustes_detail::query()->where("reajuste_id", $id)->delete();        
 
         return $this->response->success($reajuste, "El registro fue eliminado correctamente");
+    }
+
+    public function getReajustesDetail($id){
+        return reajustes_detail::query()                                
+        ->leftJoin('productos',  'productos.codigo', '=', 'reajustes_detail.codigo')
+        ->select(                                    
+            "reajustes_detail.id",
+            "reajustes_detail.codigo",
+            "reajustes_detail.cantidad_ingreso",
+            "reajustes_detail.cantidad_salida",
+            "reajustes_detail.reajuste_id",
+            "reajustes_detail.created_at",
+            "reajustes_detail.updated_at",
+
+            "productos.nombre as producto",            
+        )
+        ->addSelect(DB::raw("getStock(productos.codigo COLLATE utf8mb4_unicode_ci) as stock"))
+        ->where('reajustes_detail.reajuste_id', $id)
+        ->orderBy('reajustes_detail.codigo','asc')
+        ->get();
     }
 }
