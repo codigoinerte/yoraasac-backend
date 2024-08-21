@@ -407,15 +407,15 @@ class StockHeladosController extends Controller
     }
 
     public function updateMovimientoStock($array_detalle = [], $id = 0, $movimiento = null){
-        if($id == 0 || $movimiento == null) return null;
-        if(!empty($movimiento)){
-            $id = StockHelados::where("codigo_movimiento", $movimiento)
-                ->value("id");
+        if($id == 0 && $movimiento == null) return null;
+        
+        if(empty($movimiento)) return;
 
-            if(empty($response)) return null;
+        $id = StockHelados::where("codigo_movimiento", $movimiento)
+            ->value("id");
 
-        }
-
+        if(empty($id)) return null;
+        
         foreach($array_detalle as $item){
             $codigo = $item["codigo"]??'';                
             $cantidad = $item["cantidad"]??0;
@@ -423,10 +423,10 @@ class StockHeladosController extends Controller
             $detail = StockHeladosDetail::where("codigo", $codigo)
                                             ->where("stock_helados_id", $id)
                                             ->first();
-            if($detail){
-                $detail->cantidad = $cantidad;
-                $detail->save();
-            }
+            if(empty($detail)) continue;
+
+            $detail->cantidad = $cantidad;
+            $detail->save();
         }
     }
 
