@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User;
-use App\Http\Controllers\ReajusteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +19,7 @@ use App\Http\Controllers\MainConfiguration;
 use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\DistritoController;
 use App\Http\Controllers\PersonasController;
+use App\Http\Controllers\ReajusteController;
 use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\ProvinciaController;
@@ -28,6 +28,7 @@ use App\Http\Controllers\StockHistorialHelado;
 use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\MovimientosController;
 use App\Http\Controllers\DepartamentoController;
+use App\Http\Controllers\ImportarNotaController;
 use App\Http\Controllers\NotaHeladeroController;
 use App\Http\Controllers\StockHeladosController;
 use App\Http\Controllers\BuscarUsuarioController;
@@ -114,6 +115,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('igv', IgvController::class);
     Route::resource('movimiento', MovimientosController::class);
     Route::resource('tipo-documento',TipoDocumentoController::class);
+    Route::resource('importar-nota',ImportarNotaController::class);
     Route::get('doc-series', [SucursalesDocumentosSerieController::class, 'index']);
     
     Route::get('/pais',[ PaisController::class, 'index']);
