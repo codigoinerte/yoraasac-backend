@@ -530,8 +530,13 @@ class NotaHeladeroController extends Controller
             }
         }
 
-        if($estado_id  == 2)
+        if($estado_id == 2)
             $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $nota_heladero->codigo);
+
+        if($estado_id == 3){
+            $idStock = $this->stock->getIdFromDocumento($nota_heladero->codigo, 4, 2);
+            $this->stock->updateMovimientoStock($array_detalle, $idStock);
+        }
         
         return $this->show($id);
         //return $this->response->success($nota_heladero);
@@ -638,7 +643,7 @@ class NotaHeladeroController extends Controller
 
     }
 
-    public function listPublicProducts(Request $request)
+    public function listPublicProducts()
     {
 
         $query_string = "SELECT 
@@ -663,7 +668,8 @@ class NotaHeladeroController extends Controller
                                 prod.cantidad_caja, 
                                 prod.proveedor_precio, 
                                 prod.is_litro,
-                                CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) as stock_alert_input
+                                CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) as stock_alert_input,
+                                getStock(prod.codigo COLLATE utf8mb4_unicode_ci) as stock
                          FROM productos as prod
                          WHERE estados_id = 1 
                          ORDER BY codigo ASC";
