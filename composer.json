@@ -13,7 +13,8 @@
         "laravel/framework": "^9.19",
         "laravel/sanctum": "^3.2",
         "laravel/tinker": "^2.7",
-        "laraveles/spanish": "^1.5"
+        "laraveles/spanish": "^1.5",
+        "maatwebsite/excel": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.21",
