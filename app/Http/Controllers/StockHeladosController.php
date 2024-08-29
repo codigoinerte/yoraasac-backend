@@ -104,6 +104,7 @@ class StockHeladosController extends Controller
      */
     public function store(StockHeladosRequest $request)
     {
+        $unidades = $request->input("unidades") ?? 0;
         $movimientos_id = $request->input("movimientos_id") ?? 0;
         $tipo_documento_id = $request->input("tipo_documento_id") ?? 0;
         $fecha_movimiento = $request->input("fecha_movimiento") ?? '';
@@ -119,6 +120,7 @@ class StockHeladosController extends Controller
 
         $stock = new StockHelados();
 
+        $stock->unidades = $unidades;
         $stock->codigo_movimiento = $codigo;
         $stock->movimientos_id = $movimientos_id;
         $stock->tipo_documento_id = $tipo_documento_id;
@@ -138,8 +140,6 @@ class StockHeladosController extends Controller
         $stock->save();     
         /* añadir codigo */
 
-        $detalle = [];
-
         if(count($array_detalle) > 0)
         {
             foreach($array_detalle as $item)
@@ -158,14 +158,12 @@ class StockHeladosController extends Controller
                 $newDetail->caja_cantidad = $caja_cantidad;
 
                 $newDetail->save();
-
-                array_push($detalle, $newDetail);
             }
         }
 
-        $stock["detalle"] = $detalle;        
+        $stock = $this->getDataDetailFromId($idStock);
 
-        return $this->response->success($stock);
+        return $this->response->success($stock, "El stock fue creado con exito");
     }
 
     /**
@@ -176,31 +174,9 @@ class StockHeladosController extends Controller
      */
     public function show($id)
     {
-        $stock = StockHelados::find($id);
+        $stock = $this->getDataDetailFromId($id);
         
-        if($stock){
-    
-            // $stock_detalle = StockHeladosDetail::where('stock_helados_id', $id)->get();
-    
-            $stock_detalle = StockHeladosDetail::query()
-                        ->leftJoin('productos', 'stock_helados_detail.codigo', '=', 'productos.codigo')                        
-                        ->select(
-                            "stock_helados_detail.id",
-                            "stock_helados_detail.codigo",
-                            "stock_helados_detail.stock_helados_id",
-                            "stock_helados_detail.cantidad",
-                            "stock_helados_detail.updated_at",
-                            "stock_helados_detail.created_at",
-                            "stock_helados_detail.caja",
-                            "stock_helados_detail.caja_cantidad",
-                            "productos.nombre as producto"
-                        )
-                        ->where('stock_helados_detail.stock_helados_id', $id)
-                        ->orderBy('stock_helados_detail.created_at','desc')
-                        ->get();
-
-            $stock["detalle"] = $stock_detalle;
-            
+        if($stock){    
             return $this->response->success($stock, "El registro fue encontrado");
         }else{
             return $this->response->error("El registro no fue encontrado");
@@ -233,6 +209,7 @@ class StockHeladosController extends Controller
             return $this->response->error("No se envio un id valido");
         }
 
+        $unidades = $request->input("unidades") ?? 0;
         $movimientos_id = $request->input("movimientos_id") ?? 0;
         $tipo_documento_id = $request->input("tipo_documento_id") ?? 0;
         $fecha_movimiento = $request->input("fecha_movimiento") ?? '';
@@ -241,6 +218,8 @@ class StockHeladosController extends Controller
 
         $array_detalle = $request->input("detalle")??[];
 
+        $unidades_originales = $stock->unidades;
+        $stock->unidades = $unidades;
         $stock->movimientos_id = $movimientos_id;
         $stock->tipo_documento_id = $tipo_documento_id;
         $stock->numero_documento = $numero_documento;
@@ -248,11 +227,7 @@ class StockHeladosController extends Controller
         $stock->imagen = $image_file;        
         
         $stock->save();        
-
-        $detalle = [];
-
-        //StockHeladosDetail::where('stock_helados_id', $id)->delete();
-
+       
         if(count($array_detalle) > 0)
         {
             foreach($array_detalle as $item)
@@ -270,18 +245,20 @@ class StockHeladosController extends Controller
                 $newDetail->codigo = $codigo;
                 $newDetail->stock_helados_id = $id;
                 $newDetail->cantidad = $cantidad;
-                $newDetail->caja = $caja;
                 $newDetail->caja_cantidad = $caja_cantidad;
+                if($unidades_originales == 2 && $unidades == 1){
+                    $newDetail->caja = 0;
+                }else{
+                    $newDetail->caja = $caja;
+                }
 
                 $newDetail->save();
-
-                array_push($detalle, $newDetail);
             }
         }
 
-        $stock["detalle"] = $detalle;        
+        $stock = $this->getDataDetailFromId($id);
 
-        return $this->response->success($stock);
+        return $this->response->success($stock, "El stock fue actualizado con exito");
     }
 
     /**
@@ -489,5 +466,33 @@ class StockHeladosController extends Controller
         $stock->save();
 
         return $this->response->success($stock, "El registro fue actualizado correctamente");
+    }
+
+    public function getDataDetailFromId($id){
+        $stock = StockHelados::find($id);        
+        if($stock){
+            $stock_detalle = StockHeladosDetail::query()
+                        ->leftJoin('productos', 'stock_helados_detail.codigo', '=', 'productos.codigo')                        
+                        ->select(
+                            "stock_helados_detail.id",
+                            "stock_helados_detail.codigo",
+                            "stock_helados_detail.stock_helados_id",
+                            "stock_helados_detail.cantidad",
+                            "stock_helados_detail.updated_at",
+                            "stock_helados_detail.created_at",
+                            "stock_helados_detail.caja",
+                            "stock_helados_detail.caja_cantidad",                            
+                            "productos.nombre as producto"
+                        )
+                        ->where('stock_helados_detail.stock_helados_id', $id)
+                        ->orderBy('stock_helados_detail.created_at','desc')
+                        ->get();
+
+            $stock["detalle"] = $stock_detalle;
+            
+            return $stock;
+        }else{
+            return null;
+        }
     }
 }
