@@ -274,12 +274,18 @@ class ReajusteController extends Controller
         
         if(!empty($codigo_ingreso)){
             $idStock_ingreso = $this->stock->getStockHeladosByCodigo($codigo_ingreso);
-            $this->stock->eliminar_stock($idStock_ingreso->id);
+            if(!empty($idStock_ingreso))
+            { 
+                $this->stock->eliminar_stock($idStock_ingreso->id); 
+            }
         }
 
         if(!empty($codigo_salida)){
             $idStock_salida = $this->stock->getStockHeladosByCodigo($codigo_salida);
-            $this->stock->eliminar_stock($idStock_salida->id);
+            if(!empty($idStock_salida))
+            {
+                $this->stock->eliminar_stock($idStock_salida->id); 
+            }
         }
 
         $reajuste->delete();
