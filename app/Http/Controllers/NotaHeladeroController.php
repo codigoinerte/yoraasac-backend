@@ -863,4 +863,58 @@ class NotaHeladeroController extends Controller
 
         return $this->show($id);
     }
+
+    public function searchNotaIncomplete(){
+
+        $nota_heladero = nota_heladero::query()
+        ->whereRaw('estado = ? ', [4])
+        ->orderBy('created_at','desc')
+        ->get();
+        
+        if(count($nota_heladero) > 0)
+        {
+            foreach($nota_heladero as $key=>$item){
+
+                $id = $item->id;
+    
+                $detalle = NotaHeladeroDetalle::query()
+                                    ->leftJoin('productos',  'productos.codigo', '=', 'nota_heladero_detalle.codigo')
+                                    ->select(
+                                        "nota_heladero_detalle.id",
+                                        "nota_heladero_detalle.devolucion",
+                                        "nota_heladero_detalle.pedido",
+                                        "nota_heladero_detalle.vendido",
+                                        "nota_heladero_detalle.importe",
+                                        "nota_heladero_detalle.nota_heladeros_id",
+                                        "nota_heladero_detalle.created_at",
+                                        "nota_heladero_detalle.updated_at",
+                                        "nota_heladero_detalle.codigo",
+                                        "productos.nombre as producto",
+                                        "productos.heladero_precio_venta",
+                                        "productos.heladero_descuento",
+                                        "productos.is_litro",
+                                        "productos.cantidad_caja",
+                                    )
+                                    ->addSelect(DB::raw('(  
+                                        SELECT nd.devolucion 
+                                        FROM nota_heladero_detalle as nd 
+                                        LEFT JOIN nota_heladeros nh ON nh.id = nd.nota_heladeros_id
+                                        WHERE nd.codigo = nota_heladero_detalle.codigo AND nh.parent_id = nota_heladero_detalle.nota_heladeros_id
+                                        ) as devolucion_today'))
+                                    ->addSelect(DB::raw("CheckStock(productos.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))
+                                    ->where('nota_heladero_detalle.nota_heladeros_id', $id)
+                                    ->orderBy('nota_heladero_detalle.codigo','asc')
+                                    ->get();
+    
+                $nota_heladero[$key]["detalle"] = $detalle;
+            }
+        }
+
+        return response()->json([
+
+            'data' => $nota_heladero
+
+        ], 200);
+
+    }
 }

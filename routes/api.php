@@ -134,6 +134,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/account-update', [LoginController::class, 'accountUpdate']);
 
     Route::post('/hota-heladero-fecha-operacion/{id}', [NotaHeladeroController::class, 'saveDateOperation']);
+
+    Route::get('/buscar-nota-incompleta', [NotaHeladeroController::class, 'searchNotaIncomplete']);
 });
 
 
