@@ -19,7 +19,7 @@ class StockController extends Controller
         $query_entrada = "(SELECT SUM(shd.cantidad)
                         FROM stock_helados_detail shd
                         LEFT JOIN stock_helados sh ON sh.id = shd.stock_helados_id
-                        WHERE sh.movimientos_id = 1 AND shd.codigo = prod.codigo AND sh.tipo_documento_id <> 5)";
+                        WHERE sh.movimientos_id = 1 AND shd.codigo = prod.codigo)";
 
         $query_salida = "(SELECT SUM(shd.cantidad)
                         FROM stock_helados_detail shd
