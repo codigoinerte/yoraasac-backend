@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\StockHelados;
 use Illuminate\Http\Request;
 use App\Models\StockHeladosDetail;
+use App\Models\NotaHeladeroDetalle;
+use App\Models\nota_heladero;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ResponseController;
 use App\Http\Controllers\Request\StockHelados as StockHeladosRequest;
@@ -148,6 +150,9 @@ class StockHeladosController extends Controller
                 $cantidad = $item["cantidad"]??0;
                 $caja = $item["caja"]??0;
                 $caja_cantidad = $item["caja_cantidad"]??0;
+                $id_importado = $item["id_importado"]??0;
+                $is_litro = $item["is_litro"]??0;
+                $min_cantidad = $item["min_cantidad"]??0;
 
                 $newDetail = new StockHeladosDetail();
 
@@ -156,8 +161,20 @@ class StockHeladosController extends Controller
                 $newDetail->cantidad = $cantidad;
                 $newDetail->caja = $caja;
                 $newDetail->caja_cantidad = $caja_cantidad;
+                if($is_litro == true)
+                    $newDetail->cant_litro_devuelta = $min_cantidad;
 
                 $newDetail->save();
+
+                /* eliminar cantidad de stock detalle */
+                if($id_importado > 0){
+                    $nota_detalle = NotaHeladeroDetalle::find($id_importado);
+                    if(!empty($nota_detalle)){
+                        $nota_detalle->devolucion = ($is_litro == true) ? ($nota_detalle->devolucion - $min_cantidad) : ($nota_detalle->devolucion - $cantidad);
+                        $nota_detalle->save();
+                    }
+                }
+
             }
         }
 
@@ -276,6 +293,39 @@ class StockHeladosController extends Controller
         $stock = StockHelados::find($id);      
         if(empty($stock)){
             return $this->response->error("No se envio un id valido");
+        }
+
+        $tipo_documento_id = $stock->tipo_documento_id;
+
+        /* detectar si hay un proceso de devolucion, regresarlo a la cuenta orignal si se elimina */
+        if($tipo_documento_id == 5){
+            $documento = $stock->numero_documento ?? null;
+            if(!empty($documento)){
+                $idNota = nota_heladero::where("codigo", $documento)->value("id") ?? null;
+                if(!empty($idNota)){
+                    $stockDetalle = StockHeladosDetail::where("stock_helados_id", $id)->get();
+                    if(count($stockDetalle) > 0){
+                        foreach($stockDetalle as $item) {
+                            
+                            $codigo_helado = $item->codigo??null;
+                            $cantidad = $item->cantidad??0;
+                            $min_cantidad = $item->cant_litro_devuelta??0;
+
+                            if(!empty($codigo_helado)){
+
+                                $nota_detalle = NotaHeladeroDetalle::where("codigo", $codigo_helado)
+                                                        ->where("nota_heladeros_id", $idNota)
+                                                        ->first();
+                                if(!empty($nota_detalle)){
+                                    $nota_detalle->devolucion = $min_cantidad > 0 ? $min_cantidad : ($nota_detalle->devolucion + $cantidad);
+                                    $nota_detalle->save();
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         $auth_tipo = Auth::user()->usuario_tipo;
