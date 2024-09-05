@@ -866,10 +866,19 @@ class NotaHeladeroController extends Controller
 
     public function searchNotaIncomplete(){
 
+        $documento = request()->input("documento") ?? null;
+
+        $string_documento = (!empty($documento)) ? " OR nota_heladeros.codigo = $documento " : '';
+
         $nota_heladero = nota_heladero::query()
-        ->whereRaw('estado = ? ', [4])
-        ->orderBy('created_at','desc')
-        ->get();
+                        ->whereRaw('estado = ? ', [4])
+                        ->whereRaw("(
+                                SELECT SUM(nota_heladero_detalle.devolucion)
+                                FROM nota_heladero_detalle
+                                WHERE nota_heladeros_id = nota_heladeros.id
+                            ) > 0 $string_documento")
+                        ->orderBy('created_at','desc')
+                        ->get();
         
         if(count($nota_heladero) > 0)
         {
