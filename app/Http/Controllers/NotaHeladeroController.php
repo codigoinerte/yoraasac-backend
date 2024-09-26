@@ -693,9 +693,10 @@ class NotaHeladeroController extends Controller
         $fecha_fin = $request->input("fecha_fin") ?? date("Y-m-d");
   
 
-        $queryExtra = $queryExtraAsistencia = "";
+        $queryExtra = $queryExtraAsistencia = $queryExtraUserId = "";
         if (!empty($user_id) && $user_id !="") {            
             $queryExtra.=" AND nota_heladeros.user_id = '$user_id' ";
+            $queryExtraUserId.=" AND users.id = '$user_id' ";
         }     
         
         if(!empty($estado) && $estado != 0){
@@ -814,7 +815,7 @@ class NotaHeladeroController extends Controller
                 ) as dias_asistidos,
                 ROUND( (( $queryAsistencia  * 100) / $days) , 2) as porcentaje_asistencia
             FROM users
-            WHERE users.usuario_tipo = 7
+            WHERE users.usuario_tipo = 7 $queryExtraUserId
         ";
 
         $data = DB::select($query_string);
