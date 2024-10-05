@@ -79,12 +79,18 @@ class ImportarNotaController extends Controller
             $codigo_producto = $row[1]??null;
             $cantidad = $row[2]??null;
 
-            if(!isset($array_notas[$codigo_usuario]["detalle"]) && !empty($codigo_usuario)){
-                $array_notas[$codigo_usuario]["detalle"] = [];
+            $user_id = User::where("documento", $codigo_usuario)->value("id");
+            $count_nota = nota_heladero::where('user_id', $user_id)->count();
+
+            if($count_nota == 0)
+            {
+                if(!isset($array_notas[$codigo_usuario]["detalle"]) && !empty($codigo_usuario)){
+                    $array_notas[$codigo_usuario]["detalle"] = [];
+                }
+                if(!empty($codigo_usuario)){
+                    $array_notas[$codigo_usuario]["detalle"][$codigo_producto] = $cantidad;                
+                }
             }
-            if(!empty($codigo_usuario)){
-                $array_notas[$codigo_usuario]["detalle"][$codigo_producto] = $cantidad;                
-            }            
         }
 
         if(count($array_notas) > 0){
