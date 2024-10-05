@@ -465,16 +465,15 @@ class StockHeladosController extends Controller
         return $isReturn ? $this->response->success($stock) : $stock;
     }
 
-    public function updateMovimientoStock($array_detalle = [], $id = 0, $movimiento = null){
-        if($id == 0 && $movimiento == null) return null;
+    public function updateMovimientoStock($array_detalle = [], $id = null, $movimiento = null){
         
-        if(empty($movimiento)) return;
-
-        $id = StockHelados::where("codigo_movimiento", $movimiento)
-            ->value("id");
+        if($id == null && !empty($movimiento)){
+            $id = StockHelados::where("codigo_movimiento", $movimiento)
+                ->value("id");
+        }
 
         if(empty($id)) return null;
-        
+
         foreach($array_detalle as $item){
             $codigo = $item["codigo"]??'';                
             $cantidad = $item["cantidad"]??0;
@@ -501,6 +500,8 @@ class StockHeladosController extends Controller
         }
 
         $id = $query->value("id");
+
+        return $id;
     }
 
     public function getStockHeladosByCodigo($codigo = null){

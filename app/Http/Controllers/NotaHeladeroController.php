@@ -409,6 +409,8 @@ class NotaHeladeroController extends Controller
         $debe = $request->input("debe")??0;
         $ahorro = $request->input("ahorro")??0;
 
+        $previousEstado = $nota_heladero->estado;
+
         $nota_heladero->estado = $estado_id;
         /*
         1:Cierre - fecha_cierre
@@ -533,8 +535,12 @@ class NotaHeladeroController extends Controller
             }
         }
 
-        if($estado_id == 2)
+        if($estado_id == 2 && $previousEstado == 4){
             $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $nota_heladero->codigo);
+        }else if($estado_id == 2 && $previousEstado == 2){
+            $idStock = $this->stock->getIdFromDocumento($nota_heladero->codigo, 4, 2);
+            $response = $this->stock->updateMovimientoStock($array_detalle, $idStock);            
+        }
 
         if($estado_id == 3){
             $idStock = $this->stock->getIdFromDocumento($nota_heladero->codigo, 4, 2);
@@ -543,6 +549,7 @@ class NotaHeladeroController extends Controller
         
         return $this->show($id);
         //return $this->response->success($nota_heladero);
+        //
     }
 
     /**
