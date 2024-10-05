@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\productos;
+use App\Models\StockHelados;
 use Illuminate\Http\Request;
 use App\Models\nota_heladero;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,7 @@ use App\Models\NotaHeladeroDetalle;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\MonedaController;
 use App\Http\Controllers\ResponseController;
+use App\Http\Controllers\StockHeladosController;
 use App\Http\Requests\NotaHeladero as NotaHeladeroRequest;
 
 class NotaHeladeroController extends Controller
@@ -64,7 +66,8 @@ class NotaHeladeroController extends Controller
                         "heladero.name as heladero_nombre",
                         "creador.name",
                         "sucursals.nombre",
-                        "lestado.nombre as estado"
+                        "lestado.nombre as estado",
+                        "nota_heladeros.estado as idestado",
                     );
 
         if (!empty($documento) && $documento !="") {
@@ -551,6 +554,8 @@ class NotaHeladeroController extends Controller
     public function destroy($id)
     {
         $stock = nota_heladero::find($id);
+        $numero_documento = $stock->codigo ?? null;
+        $estado = $stock->estado ?? 0;
 
         if(empty($stock)){
             return $this->response->error("No se envio un id valido");
@@ -561,6 +566,24 @@ class NotaHeladeroController extends Controller
             return $this->response->error("El usuario no esta autorizado para realizar esta accion");
         }
 
+        /* ingresar logica para devolver a almacen cuando la nota no sea cerrada */
+        $stockController = new StockHeladosController();
+        $stockList = null;
+
+        if(!empty($numero_documento)){
+            $stockList = StockHelados::where('numero_documento', $numero_documento)->get();
+            if(count($stockList) > 0 && $estado == 2){
+                foreach($stockList as $item){
+                    $_id = $item->id ?? null;
+
+                    if(empty($_id)) continue;
+                    
+                    $stockController->eliminar_stock($_id);
+                }
+            }
+        }        
+
+        /* ingresar logica para devolver a almacen cuando la nota no sea cerrada */
         $stock->delete();
 
         return $this->response->success($stock, "El registro fue eliminado correctamente");
