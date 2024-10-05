@@ -226,6 +226,7 @@ class StockHeladosController extends Controller
             return $this->response->error("No se envio un id valido");
         }
 
+        $idStock = $id;
         $unidades = $request->input("unidades") ?? 0;
         $movimientos_id = $request->input("movimientos_id") ?? 0;
         $tipo_documento_id = $request->input("tipo_documento_id") ?? 0;
@@ -254,22 +255,53 @@ class StockHeladosController extends Controller
                 $cantidad = $item["cantidad"]??0;
                 $caja = $item["caja"]??0;
                 $caja_cantidad = $item["caja_cantidad"]??0;
+                $min_cantidad = $item["min_cantidad"]??0;
+                $id_importado = $item["id_importado"]??0;
+                $is_litro = $item["is_litro"]??0;
 
-                if(empty($idDetail)) break;
 
-                $newDetail = StockHeladosDetail::find($idDetail);
-                
-                $newDetail->codigo = $codigo;
-                $newDetail->stock_helados_id = $id;
-                $newDetail->cantidad = $cantidad;
-                $newDetail->caja_cantidad = $caja_cantidad;
-                if($unidades_originales == 2 && $unidades == 1){
-                    $newDetail->caja = 0;
-                }else{
+                if(empty($idDetail))
+                {
+                    //si hay algun producto nuevo
+                    $newDetail = new StockHeladosDetail();
+
+                    $newDetail->codigo = $codigo;
+                    $newDetail->stock_helados_id = $idStock;
+                    $newDetail->cantidad = $cantidad;
                     $newDetail->caja = $caja;
-                }
+                    $newDetail->caja_cantidad = $caja_cantidad;
+                    if($is_litro == true)
+                        $newDetail->cant_litro_devuelta = $min_cantidad;
 
-                $newDetail->save();
+                    $newDetail->save();
+
+                    /* eliminar cantidad de stock detalle */
+                    if($id_importado > 0){
+                        $nota_detalle = NotaHeladeroDetalle::find($id_importado);
+                        if(!empty($nota_detalle)){
+                            $nota_detalle->devolucion = ($is_litro == true) ? ($nota_detalle->devolucion - $min_cantidad) : ($nota_detalle->devolucion - $cantidad);
+                            $nota_detalle->save();
+                        }
+                    }
+
+                }
+                else
+                {
+                    //si el producto ya existia
+                    $newDetail = StockHeladosDetail::find($idDetail);
+                    
+                    $newDetail->codigo = $codigo;
+                    $newDetail->stock_helados_id = $id;
+                    $newDetail->cantidad = $cantidad;
+                    $newDetail->caja_cantidad = $caja_cantidad;
+                    if($unidades_originales == 2 && $unidades == 1){
+                        $newDetail->caja = 0;
+                    }else{
+                        $newDetail->caja = $caja;
+                    }
+    
+                    $newDetail->save();
+                }
             }
         }
 
@@ -535,7 +567,8 @@ class StockHeladosController extends Controller
                             "productos.nombre as producto"
                         )
                         ->where('stock_helados_detail.stock_helados_id', $id)
-                        ->orderBy('stock_helados_detail.created_at','desc')
+                        ->orderBy('stock_helados_detail.created_at','asc')
+                        ->orderBy('stock_helados_detail.codigo','asc')
                         ->get();
 
             $stock["detalle"] = $stock_detalle;
