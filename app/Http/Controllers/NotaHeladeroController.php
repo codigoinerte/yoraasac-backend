@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\sistema;
 use App\Models\productos;
 use App\Models\StockHelados;
 use Illuminate\Http\Request;
@@ -141,6 +142,8 @@ class NotaHeladeroController extends Controller
         $debe = $request->input("debe")??0;
         $ahorro = $request->input("ahorro")??0;
 
+        $closeNota = $request->input("closeNota")??false;
+
         $monedaController = new MonedaController();        
         $moneda_id = $monedaController->getMonedaPrincipal()->id ?? 1;
 
@@ -265,7 +268,21 @@ class NotaHeladeroController extends Controller
         if($estado_id  == 2)
         $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $numero_documento);
         
-        //return $this->response->success($nota_heladero);
+        // si existe el id parent y esta activa closeNota, se debe cerrar la nota parent
+        if($parent_id > 0 && $closeNota === true){
+            $nota_heladero_parent = nota_heladero::find($parent_id);
+
+            $sistema = sistema::find(1);
+
+            $cargo_baterias = $sistema->cargo_baterias ?? 0;
+
+            $nota_heladero_parent->cargo_baterias = $cargo_baterias;
+            $nota_heladero_parent->debe = $cargo_baterias;
+            $nota_heladero_parent->estado = 1;
+            $nota_heladero_parent->fecha_cierre = date("Y-m-d H:i:s");
+            $nota_heladero_parent->save();
+           
+        }
 
         return $this->show($nota_heladero->id);
     }
@@ -869,6 +886,7 @@ class NotaHeladeroController extends Controller
     public function saveDateOperation(Request $request, $id) {
         $type = $request->input("estado") ?? '';
         $date = $request->input("fecha_operacion") ?? '';
+        $closeNota = $request->input("closeNota") ?? false;
         
         if(empty($id))
             return $this->response->error("No se envio un id valido");
@@ -892,7 +910,9 @@ class NotaHeladeroController extends Controller
 
         $nota_heladero->save();
 
-        return $this->show($id);
+        if($closeNota == false) return $this->show($id);
+
+
     }
 
     public function searchNotaIncomplete(){
