@@ -404,12 +404,20 @@ class PersonasController extends Controller
             CONCAT(users.name,' ',users.apellidos )as heladero_nombre,
             (
                 SELECT count(*)
-                FROM  asistencias as asistencias
+                FROM  asistencia_apertura as asistencias
                 WHERE   MONTH(asistencias.fecha) = $fecha_mes
                     AND YEAR(asistencias.fecha) = $fecha_anio
                     AND DAY(asistencias.fecha) = $fecha_dia
                     AND asistencias.user_id = users.id
-            ) as asistio
+            ) as asistencia_apertura,
+            (
+                SELECT count(*)
+                FROM  asistencia_cierre as asistencias
+                WHERE   MONTH(asistencias.fecha) = $fecha_mes
+                    AND YEAR(asistencias.fecha) = $fecha_anio
+                    AND DAY(asistencias.fecha) = $fecha_dia
+                    AND asistencias.user_id = users.id
+            ) as asistencia_cierre
         FROM users
         WHERE users.usuario_tipo = 7
         ORDER BY heladero_nombre;
