@@ -64,12 +64,15 @@ class NotaHeladeroController extends Controller
                         "nota_heladeros.updated_at",
                         "nota_heladeros.cargo_baterias",
                         "heladero.documento as heladero_documento",
-                        "heladero.name as heladero_nombre",
                         "creador.name",
                         "sucursals.nombre",
                         "lestado.nombre as estado",
                         "nota_heladeros.estado as idestado",
-                    );
+                    )
+                    ->addSelect(DB::raw("CONCAT(heladero.name, ' ', heladero.apellidos) as heladero_nombre"))
+                    ->addSelect(DB::raw("(SELECT nota_children.id
+                                            FROM nota_heladeros as nota_children
+                                            WHERE nota_children.parent_id = nota_heladeros.id) as id_children"));
 
         if (!empty($documento) && $documento !="") {
 
@@ -325,14 +328,17 @@ class NotaHeladeroController extends Controller
                         "nota_heladeros.id_usuario",
                         "nota_heladeros.created_at",
                         "nota_heladeros.updated_at",
-                        "heladero.documento as heladero_documento",
-                        "heladero.name as heladero_nombre",
+                        "heladero.documento as heladero_documento",                        
                         "creador.name",
                         "sucursals.nombre",
                         "nota_heladeros.estado",
                         "lestado.nombre as estado_nombre",
                         "moneda.moneda"
                     )
+                    ->addSelect(DB::raw("CONCAT(heladero.name, ' ', heladero.apellidos) as heladero_nombre"))
+                    ->addSelect(DB::raw("(SELECT nota_children.id
+                                            FROM nota_heladeros as nota_children
+                                            WHERE nota_children.parent_id = nota_heladeros.id) as id_children"))
                     ->where('nota_heladeros.id', $id)
                     ->first();
 
@@ -425,6 +431,7 @@ class NotaHeladeroController extends Controller
         $pago = $request->input("pago")??0;
         $debe = $request->input("debe")??0;
         $ahorro = $request->input("ahorro")??0;
+        $observaciones = $request->input("observaciones")??0;
 
         $previousEstado = $nota_heladero->estado;
 
@@ -452,6 +459,7 @@ class NotaHeladeroController extends Controller
         $nota_heladero->pago            = $pago;
         $nota_heladero->debe            = $debe;
         $nota_heladero->ahorro          = $ahorro;
+        $nota_heladero->observaciones   = $observaciones;
         $nota_heladero->cucharas        = 0;
         $nota_heladero->conos           = 0;
         if($estado_id == 3){
@@ -782,7 +790,7 @@ class NotaHeladeroController extends Controller
             $queryExtra.=" AND $fecha_column BETWEEN '$fecha1' AND '$fecha2' ";
             $queryExtraAsistencia.=" AND asistencias.fecha BETWEEN '$fecha1' AND '$fecha2' ";
 
-            $days = $fecha1->diffInDays($fecha2);
+            $days = $fecha1->diffInDays($fecha2) + 1;            
         }else{
             $fecha = Carbon::parse($fecha_inicio);
 
@@ -798,7 +806,7 @@ class NotaHeladeroController extends Controller
         
         $queryAsistencia = "(
             SELECT count(*)
-            FROM  asistencias as asistencias
+            FROM  asistencia_apertura as asistencias
             WHERE asistencias.user_id = users.id $queryExtraAsistencia
         )";
         $query_string = "
@@ -857,7 +865,7 @@ class NotaHeladeroController extends Controller
                 ) as deuda_total,
                 (
                     SELECT count(*)
-                    FROM  asistencias as asistencias
+                    FROM  asistencia_apertura as asistencias
                     WHERE asistencias.user_id = users.id $queryExtraAsistencia
                 ) as dias_asistidos,
                 ROUND( (( $queryAsistencia  * 100) / $days) , 2) as porcentaje_asistencia
