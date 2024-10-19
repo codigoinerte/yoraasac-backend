@@ -127,6 +127,7 @@ class ProductosController extends Controller
         $unidad_id = $request->input("unidad_id") ?? 0;
         $moneda_id = $request->input("moneda_id") ?? 0;
         $is_litro = $request->input("is_litro") ?? 0;
+        $is_barquillo = $request->input("is_barquillo") ?? 0;
         $heladero_precio_venta = $request->input("heladero_precio_venta") ?? 0;
         $heladero_descuento = $request->input("heladero_descuento") ?? 0;
         $igv_id = $request->input("igv_id") ?? 0;
@@ -152,7 +153,8 @@ class ProductosController extends Controller
         $producto->igv_id = $igv_id;
         $producto->cantidad_caja = $cantidad_caja;
         $producto->proveedor_precio = $proveedor_precio;
-        $producto->is_litro = $is_litro;
+        $producto->is_litro = $is_barquillo === true ? 0 : $is_litro;
+        $producto->is_barquillo = $is_barquillo;
 
         $producto->save();
 
@@ -222,6 +224,7 @@ class ProductosController extends Controller
         $cantidad_caja = $request->input("cantidad_caja") ?? 0;
         $proveedor_precio = $request->input("proveedor_precio") ?? 0;
         $is_litro = $request->input("is_litro") ?? 0;
+        $is_barquillo = $request->input("is_barquillo") ?? 0;
 
         $producto->codigo = $codigo;
         $producto->nombre = $nombre;
@@ -240,7 +243,8 @@ class ProductosController extends Controller
         $producto->igv_id = $igv_id;
         $producto->cantidad_caja = $cantidad_caja;
         $producto->proveedor_precio = $proveedor_precio;
-        $producto->is_litro = $is_litro;
+        $producto->is_litro = $is_barquillo === true ? 0 : $is_litro;
+        $producto->is_barquillo =  $is_barquillo;
 
         $producto->save();
 
