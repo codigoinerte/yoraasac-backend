@@ -13,8 +13,7 @@ class StockBarquillos extends FormRequest
     {
         return [
             'movimientos_id'=> 'required|integer|exists:movimientos,id',
-            'tipo_documento_id'=> 'required|integer|exists:tipo_documentos,id',
-            'cantidad'=> 'required|integer'
+            'tipo_documento_id'=> 'required|integer|exists:tipo_documentos,id'
         ];
     }
 
