@@ -726,7 +726,7 @@ class NotaHeladeroController extends Controller
                                 CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) as stock_alert_input,
                                 getStock(prod.codigo COLLATE utf8mb4_unicode_ci) as stock
                          FROM productos as prod
-                         WHERE estados_id = 1 
+                         WHERE estados_id = 1 AND prod.is_barquillo = 0
                          ORDER BY codigo ASC";
 
         $data = DB::select($query_string);
@@ -927,7 +927,12 @@ class NotaHeladeroController extends Controller
 
         $documento = request()->input("documento") ?? null;
 
-        $string_documento = (!empty($documento)) ? " OR nota_heladeros.codigo = $documento " : '';
+        $nota_found = nota_heladero::query()
+                            ->where("codigo", $documento)
+                            ->get();
+
+        $string_documento = (!empty($documento) && count($nota_found) > 0) ? " OR nota_heladeros.codigo = '$documento' " : '';
+        
 
         $nota_heladero = nota_heladero::query()
                         ->whereRaw('estado = ? ', [4])
