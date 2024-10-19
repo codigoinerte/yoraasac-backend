@@ -45,6 +45,8 @@ class BuscarProductoController extends Controller
                             "productos.moneda_id",
                             "productos.igv_id",
                             "productos.cantidad_caja",
+                            "productos.is_barquillo",
+                            "productos.is_litro",
                             "estados.estado",
                             "moneda.moneda",
                             "productos.created_at",
