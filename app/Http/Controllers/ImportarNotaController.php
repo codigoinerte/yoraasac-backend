@@ -189,7 +189,7 @@ class ImportarNotaController extends Controller
         }
         else
         {
-            return $this->response->success([], "No hubo registros para importar");
+            return $this->response->success([], "No hubo registros para importar", "info", "No registrado");
         }        
     }
 

@@ -14,11 +14,13 @@ class ResponseController extends Controller
         ], 400);
     }
 
-    public function success($data, $mensaje = "El registro fue guardado exitosamente")
+    public function success($data, $mensaje = "El registro fue guardado exitosamente", $icon = "success", $title = "Exito!")
     {
         return response()->json([
             'success'   => true,
+            'icon' => $icon,
             'message'   => $mensaje,
+            'title' => $title,
             'data'=> $data,            
         ], 200);
     }
