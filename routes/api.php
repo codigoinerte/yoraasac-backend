@@ -99,11 +99,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::resource('stock-helado', StockHeladosController::class);
 
     Route::post('eliminar-foto-nota/{id}', [StockHeladosController::class, 'updateDeleteImagen']);
-
+    
     Route::resource('stock-bateria', StockBateriasController::class);
-
+    
     Route::resource('stock-barquillos', StockBarquillosController::class);
 
+    Route::post('eliminar-foto-stock-barquillo/{id}', [StockBarquillosController::class, 'updateDeleteImagen']);
+    
     Route::resource('reajuste', ReajusteController::class);
 
     Route::resource('unspsc', UnspscController::class);
