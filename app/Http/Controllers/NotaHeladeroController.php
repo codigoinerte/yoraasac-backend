@@ -312,8 +312,7 @@ class NotaHeladeroController extends Controller
                         "nota_heladeros.user_id",
                         "nota_heladeros.moneda_id",
                         "nota_heladeros.id_sucursal",
-                        "nota_heladeros.deuda_anterior",
-                        "nota_heladeros.cargo_baterias",
+                        "nota_heladeros.deuda_anterior",                        
                         "nota_heladeros.monto",
                         "nota_heladeros.pago",
                         "nota_heladeros.debe",
@@ -328,6 +327,7 @@ class NotaHeladeroController extends Controller
                         "nota_heladeros.id_usuario",
                         "nota_heladeros.created_at",
                         "nota_heladeros.updated_at",
+                        "nota_heladeros.observaciones",
                         "heladero.documento as heladero_documento",                        
                         "creador.name",
                         "sucursals.nombre",
@@ -339,6 +339,11 @@ class NotaHeladeroController extends Controller
                     ->addSelect(DB::raw("(SELECT nota_children.id
                                             FROM nota_heladeros as nota_children
                                             WHERE nota_children.parent_id = nota_heladeros.id) as id_children"))
+                    ->addSelect(DB::raw("IF(nota_heladeros.cargo_baterias = 0, (
+                        SELECT sistemas.cargo_baterias
+                        FROM sistemas as sistemas
+                        WHERE id = 1
+                    ), nota_heladeros.cargo_baterias) as cargo_baterias"))
                     ->where('nota_heladeros.id', $id)
                     ->first();
 
@@ -885,7 +890,7 @@ class NotaHeladeroController extends Controller
         
         return response()->json([
 
-            'data' => $data
+            'data' => $data,          
 
         ], 200);
 
