@@ -72,7 +72,9 @@ class NotaHeladeroController extends Controller
                     ->addSelect(DB::raw("CONCAT(heladero.name, ' ', heladero.apellidos) as heladero_nombre"))
                     ->addSelect(DB::raw("(SELECT nota_children.id
                                             FROM nota_heladeros as nota_children
-                                            WHERE nota_children.parent_id = nota_heladeros.id) as id_children"));
+                                            WHERE nota_children.parent_id = nota_heladeros.id) as id_children"))
+                    ->addSelect(DB::raw("avaibleDelete(nota_heladeros.estado, nota_heladeros.parent_id) as avaibleDelete"))
+                    ->addSelect(DB::raw("avaibleDeleteMessage(nota_heladeros.estado, nota_heladeros.parent_id) as avaibleDeleteMessage"));
 
         if (!empty($documento) && $documento !="") {
 
@@ -590,11 +592,12 @@ class NotaHeladeroController extends Controller
      */
     public function destroy($id)
     {
-        $stock = nota_heladero::find($id);
-        $numero_documento = $stock->codigo ?? null;
-        $estado = $stock->estado ?? 0;
+        $nota = nota_heladero::find($id);
+        $numero_documento = $nota->codigo ?? null;
+        $parent_id = $nota->parent_id ?? null;
+        $estado = $nota->estado ?? 0;
 
-        if(empty($stock)){
+        if(empty($nota)){
             return $this->response->error("No se envio un id valido");
         }
 
@@ -609,7 +612,7 @@ class NotaHeladeroController extends Controller
 
         if(!empty($numero_documento)){
             $stockList = StockHelados::where('numero_documento', $numero_documento)->get();
-            if(count($stockList) > 0 && $estado == 2){
+            if(count($stockList) > 0){
                 foreach($stockList as $item){
                     $_id = $item->id ?? null;
 
@@ -618,12 +621,19 @@ class NotaHeladeroController extends Controller
                     $stockController->eliminar_stock($_id);
                 }
             }
-        }        
+        }   
+                
+        if(!empty($parent_id)){
+            $stock_parent = nota_heladero::find($parent_id);
+            $stock_parent->estado = 2;
+            $stock_parent->fecha_guardado = null;
+            $stock_parent->save();
+        }
 
         /* ingresar logica para devolver a almacen cuando la nota no sea cerrada */
-        $stock->delete();
+        $nota->delete();
 
-        return $this->response->success($stock, "El registro fue eliminado correctamente");
+        return $this->response->success($nota, "El registro fue eliminado correctamente");
     }
 
     public function findNotaGuardada(Request $request)
