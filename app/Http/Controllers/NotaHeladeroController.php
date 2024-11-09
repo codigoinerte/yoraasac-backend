@@ -368,6 +368,8 @@ class NotaHeladeroController extends Controller
                                     "productos.heladero_descuento",
                                     "productos.is_litro"
                                 )
+                                ->addSelect(DB::raw("CheckStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))
+                                ->addSelect(DB::raw("getStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci) as stock"))
                                 ->addSelect(DB::raw('(  
                                         SELECT nd.devolucion 
                                         FROM nota_heladero_detalle as nd 
@@ -438,7 +440,7 @@ class NotaHeladeroController extends Controller
         $pago = $request->input("pago")??0;
         $debe = $request->input("debe")??0;
         $ahorro = $request->input("ahorro")??0;
-        $observaciones = $request->input("observaciones")??0;
+        $observaciones = $request->input("observaciones")??'';
 
         $previousEstado = $nota_heladero->estado;
 
@@ -625,9 +627,11 @@ class NotaHeladeroController extends Controller
                 
         if(!empty($parent_id)){
             $stock_parent = nota_heladero::find($parent_id);
-            $stock_parent->estado = 2;
-            $stock_parent->fecha_guardado = null;
-            $stock_parent->save();
+            if(!empty($stock_parent)){
+                $stock_parent->estado = 2;
+                $stock_parent->fecha_guardado = null;
+                $stock_parent->save();
+            }
         }
 
         /* ingresar logica para devolver a almacen cuando la nota no sea cerrada */
