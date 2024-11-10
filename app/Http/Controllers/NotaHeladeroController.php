@@ -834,6 +834,12 @@ class NotaHeladeroController extends Controller
                 users.documento as heladero_documento, 
                 CONCAT(users.name,' ',users.apellidos )as heladero_nombre,
                 (
+                    SELECT GROUP_CONCAT(CONCAT('Nota ', codigo,':', observaciones))
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as observaciones,
+                (
                     SELECT SUM(nota_heladeros.monto)
                     FROM nota_heladeros
                     WHERE nota_heladeros.user_id = users.id
@@ -891,7 +897,7 @@ class NotaHeladeroController extends Controller
             FROM users
             WHERE users.usuario_tipo = 7 $queryExtraUserId
         ";
-
+        //return response()->json([ 'query' => $query_string ]);
         $data = DB::select($query_string);
 
         function convertDate($fecha = ''){
