@@ -742,6 +742,8 @@ class NotaHeladeroController extends Controller
                                 prod.cantidad_caja, 
                                 prod.proveedor_precio, 
                                 prod.is_litro,
+                                (0.00) as vendido,
+                                (0.00) as importe,
                                 CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) as stock_alert_input,
                                 getStock(prod.codigo COLLATE utf8mb4_unicode_ci) as stock
                          FROM productos as prod
@@ -834,7 +836,7 @@ class NotaHeladeroController extends Controller
                 users.documento as heladero_documento, 
                 CONCAT(users.name,' ',users.apellidos )as heladero_nombre,
                 (
-                    SELECT GROUP_CONCAT(CONCAT('Nota ', codigo,':', observaciones))
+                    SELECT GROUP_CONCAT(CONCAT('Nota ', codigo,': ', observaciones))
                     FROM nota_heladeros
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
