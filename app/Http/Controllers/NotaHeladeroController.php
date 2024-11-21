@@ -744,6 +744,7 @@ class NotaHeladeroController extends Controller
                                 prod.is_litro,
                                 (0.00) as vendido,
                                 (0.00) as importe,
+                                IF(prod.is_litro = 1, 0.00, 0) as devolucion,
                                 CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) as stock_alert_input,
                                 getStock(prod.codigo COLLATE utf8mb4_unicode_ci) as stock
                          FROM productos as prod
