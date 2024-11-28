@@ -837,7 +837,7 @@ class NotaHeladeroController extends Controller
                 users.documento as heladero_documento, 
                 CONCAT(users.name,' ',users.apellidos )as heladero_nombre,
                 (
-                    SELECT GROUP_CONCAT(CONCAT('Nota ', codigo,': ', observaciones))
+                    SELECT GROUP_CONCAT(CONCAT('Nota ', codigo,': ', observaciones) SEPARATOR '----')
                     FROM nota_heladeros
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
