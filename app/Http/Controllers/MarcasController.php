@@ -57,11 +57,7 @@ class MarcasController extends Controller
 
         $marca->save();
 
-        return response()->json([
-
-            'data' => $marca
-
-        ], 200);
+        return $this->response->success($marca);
     }
 
     /**
@@ -110,11 +106,7 @@ class MarcasController extends Controller
 
         $marca->save();
 
-        return response()->json([
-
-            'data' => $marca
-
-        ], 200);
+        return $this->response->success($marca);
     }
 
     /**
