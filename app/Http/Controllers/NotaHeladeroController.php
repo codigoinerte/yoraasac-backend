@@ -843,7 +843,7 @@ class NotaHeladeroController extends Controller
                     $queryExtra
                 ) as observaciones,
                 (
-                    SELECT SUM(nota_heladeros.monto+nota_heladeros.cargo_baterias)
+                    SELECT SUM(nota_heladeros.monto+nota_heladeros.cargo_baterias+nota_heladeros.deuda_anterior)
                     FROM nota_heladeros
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
