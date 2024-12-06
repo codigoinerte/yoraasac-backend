@@ -201,6 +201,7 @@ class NotaHeladeroController extends Controller
                 $pedido = $item["pedido"]??0;
                 $codigo = $item["codigo"]??0;
                 $vendido = $item["vendido"]??0;
+                $vendido_cantidad = $item["vendido_cantidad"]??0;
                 $importe = $item["importe"]??0;
                 
                 $nota_detalle = new NotaHeladeroDetalle();
@@ -209,6 +210,7 @@ class NotaHeladeroController extends Controller
                 $nota_detalle->pedido = $pedido;
                 $nota_detalle->codigo = $codigo;
                 $nota_detalle->vendido = $vendido;
+                $nota_detalle->vendido_cantidad = $vendido_cantidad;
                 $nota_detalle->importe = $importe;
                 $nota_detalle->nota_heladeros_id = $nota_heladero->id;
 
@@ -230,6 +232,7 @@ class NotaHeladeroController extends Controller
                 $pedido = $item["pedido"]??0;
                 $codigo = $item["codigo"]??0;
                 $vendido = $item["vendido"]??0;
+                $vendido_cantidad = $item["vendido_cantidad"]??0;
                 $importe = $item["importe"]??0;
                 
                 if($estado_id == 2){
@@ -353,11 +356,13 @@ class NotaHeladeroController extends Controller
         {
             $detalle = NotaHeladeroDetalle::query()                                
                                 ->leftJoin('productos',  'productos.codigo', '=', 'nota_heladero_detalle.codigo')
+                                ->leftJoin('nota_heladeros',  'nota_heladeros.id', '=', 'nota_heladero_detalle.nota_heladeros_id')
                                 ->select(
                                     "nota_heladero_detalle.id",
                                     "nota_heladero_detalle.devolucion",
                                     "nota_heladero_detalle.pedido",
-                                    "nota_heladero_detalle.vendido",
+                                    
+                                    "nota_heladero_detalle.vendido_cantidad",
                                     "nota_heladero_detalle.importe",
                                     "nota_heladero_detalle.nota_heladeros_id",
                                     "nota_heladero_detalle.created_at",
@@ -367,7 +372,14 @@ class NotaHeladeroController extends Controller
                                     "productos.heladero_precio_venta",
                                     "productos.heladero_descuento",
                                     "productos.is_litro"
-                                )
+                                ) //ROUND(nota_heladero_detalle.vendido, 0)
+                                ->addSelect(DB::raw('
+                                    IF(nota_heladeros.estado = 4, "", (
+                                        IF(nota_heladero_detalle.vendido = 0,
+                                        IF(productos.is_litro, "0.00", "0"),
+                                        IF(productos.is_litro, nota_heladero_detalle.vendido, ROUND(nota_heladero_detalle.vendido, 0)  ))
+                                    ) ) as vendido
+                                ')) 
                                 ->addSelect(DB::raw("CheckStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))
                                 ->addSelect(DB::raw("getStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci) as stock"))
                                 ->addSelect(DB::raw('(  
@@ -488,6 +500,7 @@ class NotaHeladeroController extends Controller
                 $pedido     = $item["pedido"]??0;
                 $codigo     = $item["codigo"]??0;
                 $vendido    = $item["vendido"]??0;
+                $vendido_cantidad = $item["vendido_cantidad"]??0;
                 $importe    = $item["importe"]??0;
 
                 if($idDetalle > 0)
@@ -500,6 +513,7 @@ class NotaHeladeroController extends Controller
                         $nota_detalle->pedido = $pedido;
                         $nota_detalle->codigo = $codigo;
                         $nota_detalle->vendido = $vendido;
+                        $nota_detalle->vendido_cantidad = $vendido_cantidad;
                         $nota_detalle->importe = $importe;
                         $nota_detalle->nota_heladeros_id = $nota_heladero->id;
         
@@ -516,6 +530,7 @@ class NotaHeladeroController extends Controller
                         $nota_detalle->pedido = $pedido;
                         $nota_detalle->codigo = $codigo;
                         $nota_detalle->vendido = $vendido;
+                        $nota_detalle->vendido_cantidad = $vendido_cantidad;
                         $nota_detalle->importe = $importe;
                         $nota_detalle->nota_heladeros_id = $nota_heladero->id;
         
@@ -667,12 +682,10 @@ class NotaHeladeroController extends Controller
 
             $detalle = NotaHeladeroDetalle::query()
                                 ->leftJoin('productos',  'productos.codigo', '=', 'nota_heladero_detalle.codigo')
+                                ->leftJoin('nota_heladeros',  'nota_heladeros.id', '=', 'nota_heladero_detalle.nota_heladeros_id')
                                 ->select(
                                     "nota_heladero_detalle.id",
-                                    "nota_heladero_detalle.devolucion",
                                     "nota_heladero_detalle.pedido",
-                                    "nota_heladero_detalle.vendido",
-                                    "nota_heladero_detalle.importe",
                                     "nota_heladero_detalle.nota_heladeros_id",
                                     "nota_heladero_detalle.created_at",
                                     "nota_heladero_detalle.updated_at",
@@ -682,13 +695,37 @@ class NotaHeladeroController extends Controller
                                     "productos.heladero_descuento",
                                     "productos.is_litro"
                                 )
+                                //nota_heladero_detalle.vendido_cantidad
+                                ->addSelect(DB::raw('
+                                    IF(nota_heladeros.estado = 4, "", (
+                                        IF(nota_heladero_detalle.vendido_cantidad = 0,
+                                        IF(productos.is_litro, "0.00", "0"),
+                                        nota_heladero_detalle.vendido_cantidad )
+                                    ) ) as vendido_cantidad
+                                ')) // nota_heladero_detalle.vendido
+                                ->addSelect(DB::raw('
+                                    IF(nota_heladeros.estado = 4, "", (
+                                        IF(nota_heladero_detalle.vendido = 0,
+                                        IF(productos.is_litro, "0.00", "0"),
+                                        IF(productos.is_litro, nota_heladero_detalle.vendido, ROUND(nota_heladero_detalle.vendido, 0))
+                                        )
+                                    ) ) as vendido
+                                '))         
+                                ->addSelect(DB::raw('
+                                    IF(nota_heladeros.estado = 4, "", nota_heladero_detalle.importe ) as importe
+                                '))         
+                                ->addSelect(DB::raw('
+                                    IF(nota_heladero_detalle.devolucion = 0, 
+                                    IF(productos.is_litro, "0.00", "0"), 
+                                    nota_heladero_detalle.devolucion ) as devolucion
+                                '))
                                 ->addSelect(DB::raw('(  
                                     SELECT nd.devolucion 
                                     FROM nota_heladero_detalle as nd 
                                     LEFT JOIN nota_heladeros nh ON nh.id = nd.nota_heladeros_id
                                     WHERE nd.codigo = nota_heladero_detalle.codigo AND nh.parent_id = nota_heladero_detalle.nota_heladeros_id
                                     ) as devolucion_today'))
-                                ->addSelect(DB::raw("CheckStock(productos.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))
+                                ->addSelect(DB::raw("CheckStock(productos.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))                                
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
                                 ->orderBy('nota_heladero_detalle.codigo','asc')
                                 ->get();
@@ -742,9 +779,10 @@ class NotaHeladeroController extends Controller
                                 prod.cantidad_caja, 
                                 prod.proveedor_precio, 
                                 prod.is_litro,
-                                (0.00) as vendido,
-                                (0.00) as importe,
-                                IF(prod.is_litro = 1, 0.00, 0) as devolucion,
+                                '' as vendido_cantidad,
+                                '' as vendido,
+                                '' as importe,
+                                IF(prod.is_litro = 1, '0.00', '0') as devolucion,
                                 CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) as stock_alert_input,
                                 getStock(prod.codigo COLLATE utf8mb4_unicode_ci) as stock
                          FROM productos as prod
@@ -985,6 +1023,7 @@ class NotaHeladeroController extends Controller
                                         "nota_heladero_detalle.devolucion",
                                         "nota_heladero_detalle.pedido",
                                         "nota_heladero_detalle.vendido",
+                                        "nota_heladero_detalle.vendido_cantidad",
                                         "nota_heladero_detalle.importe",
                                         "nota_heladero_detalle.nota_heladeros_id",
                                         "nota_heladero_detalle.created_at",
