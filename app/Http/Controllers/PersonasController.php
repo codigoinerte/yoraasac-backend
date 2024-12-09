@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Distrito;
+use App\Models\Provincia;
+use App\Models\Departamento;
 use Illuminate\Http\Request;
 use App\Http\Requests\uploadImage;
 use Illuminate\Support\Facades\Auth;
@@ -172,6 +175,24 @@ class PersonasController extends Controller
     public function show($id)
     {
         $persona = User::find($id);
+
+        $iddepartamento = $persona->iddepartamento ?? 0;
+        $idprovincia = $persona->idprovincia ?? 0;
+        $iddistrito = $persona->iddistrito ?? 0;
+
+        $departamentos = Departamento::all();
+        $provincias = [];
+        if($iddepartamento > 0){
+           $provincias = Provincia::where("departamento_id", $iddepartamento)->orderBy("provincia","asc")->get(); 
+        }
+        $distritos = [];
+        if($idprovincia > 0){
+            $distritos = Distrito::where("provincia_id", $idprovincia)->orderBy("distrito","asc")->get();
+        }
+
+        $persona->departamentos = $departamentos;
+        $persona->provincias = $provincias;
+        $persona->distritos = $distritos;
 
         if($persona){
             
