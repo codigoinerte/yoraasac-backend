@@ -359,11 +359,9 @@ class NotaHeladeroController extends Controller
                                 ->leftJoin('nota_heladeros',  'nota_heladeros.id', '=', 'nota_heladero_detalle.nota_heladeros_id')
                                 ->select(
                                     "nota_heladero_detalle.id",
-                                    "nota_heladero_detalle.devolucion",
                                     "nota_heladero_detalle.pedido",
-                                    
+                                    "nota_heladero_detalle.devolucion",
                                     "nota_heladero_detalle.vendido_cantidad",
-                                    "nota_heladero_detalle.importe",
                                     "nota_heladero_detalle.nota_heladeros_id",
                                     "nota_heladero_detalle.created_at",
                                     "nota_heladero_detalle.updated_at",
@@ -373,13 +371,15 @@ class NotaHeladeroController extends Controller
                                     "productos.heladero_descuento",
                                     "productos.is_litro"
                                 ) //ROUND(nota_heladero_detalle.vendido, 0)
-                                ->addSelect(DB::raw('
-                                    IF(nota_heladeros.estado = 4, "", (
-                                        IF(nota_heladero_detalle.vendido = 0,
-                                        IF(productos.is_litro, "0.00", "0"),
-                                        IF(productos.is_litro, nota_heladero_detalle.vendido, ROUND(nota_heladero_detalle.vendido, 0)  ))
-                                    ) ) as vendido
-                                ')) 
+                                ->addSelect(DB::raw('IF(nota_heladeros.estado = 1, nota_heladero_detalle.importe, "") as importe'))
+                                ->addSelect(DB::raw('IF(nota_heladeros.estado = 1, nota_heladero_detalle.vendido, "") as vendido'))
+                                // ->addSelect(DB::raw('
+                                //     IF(nota_heladeros.estado = 4, "", (
+                                //         IF(nota_heladero_detalle.vendido = 0,
+                                //         IF(productos.is_litro, "0.00", "0"),
+                                //         IF(productos.is_litro, nota_heladero_detalle.vendido, ROUND(nota_heladero_detalle.vendido, 0)  ))
+                                //     ) ) as vendido
+                                // ')) 
                                 ->addSelect(DB::raw("CheckStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))
                                 ->addSelect(DB::raw("getStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci) as stock"))
                                 ->addSelect(DB::raw('(  
