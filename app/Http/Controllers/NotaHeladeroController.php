@@ -919,6 +919,12 @@ class NotaHeladeroController extends Controller
                     $queryExtra
                 ) as debe,
                 (
+                    SELECT SUM(nota_heladeros.efectivo)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as efectivo,
+                (
                     SELECT SUM(nota_heladeros.ahorro)
                     FROM nota_heladeros
                     WHERE nota_heladeros.user_id = users.id
