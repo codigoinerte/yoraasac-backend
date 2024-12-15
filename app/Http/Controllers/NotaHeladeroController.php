@@ -146,6 +146,8 @@ class NotaHeladeroController extends Controller
         $pago = $request->input("pago")??0;
         $debe = $request->input("debe")??0;
         $ahorro = $request->input("ahorro")??0;
+        $yape = $request->input("yape")??0;
+        $efectivo = $request->input("efectivo")??0;
 
         $closeNota = $request->input("closeNota")??false;
 
@@ -170,6 +172,8 @@ class NotaHeladeroController extends Controller
             $nota_heladero->pago            = $pago;
             $nota_heladero->debe            = $debe;
             $nota_heladero->ahorro          = $ahorro;
+            $nota_heladero->yape            = $yape;
+            $nota_heladero->efectivo        = $efectivo;
             $nota_heladero->deuda_anterior  = $deuda_anterior;
             $nota_heladero->cargo_baterias  = $cargo_baterias;
         }
@@ -452,6 +456,8 @@ class NotaHeladeroController extends Controller
         $pago = $request->input("pago")??0;
         $debe = $request->input("debe")??0;
         $ahorro = $request->input("ahorro")??0;
+        $yape = $request->input("yape")??0;
+        $efectivo = $request->input("efectivo")??0;
         $observaciones = $request->input("observaciones")??'';
 
         $previousEstado = $nota_heladero->estado;
@@ -480,6 +486,8 @@ class NotaHeladeroController extends Controller
         $nota_heladero->pago            = $pago;
         $nota_heladero->debe            = $debe;
         $nota_heladero->ahorro          = $ahorro;
+        $nota_heladero->yape            = $yape;
+        $nota_heladero->efectivo        = $efectivo;
         $nota_heladero->observaciones   = $observaciones;
         $nota_heladero->cucharas        = 0;
         $nota_heladero->conos           = 0;
