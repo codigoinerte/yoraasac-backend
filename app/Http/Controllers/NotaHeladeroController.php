@@ -328,6 +328,8 @@ class NotaHeladeroController extends Controller
                         "nota_heladeros.ahorro",
                         "nota_heladeros.cucharas",
                         "nota_heladeros.conos",
+                        "nota_heladeros.yape",
+                        "nota_heladeros.efectivo",
                         "nota_heladeros.placas_entregas",
                         "nota_heladeros.placas_devueltas",
                         "nota_heladeros.fecha_guardado",
@@ -376,7 +378,11 @@ class NotaHeladeroController extends Controller
                                     "productos.is_litro"
                                 ) //ROUND(nota_heladero_detalle.vendido, 0)
                                 ->addSelect(DB::raw('IF(nota_heladeros.estado = 1, nota_heladero_detalle.importe, "") as importe'))
-                                ->addSelect(DB::raw('IF(nota_heladeros.estado = 1, nota_heladero_detalle.vendido, "") as vendido'))
+                                ->addSelect(DB::raw('IF(nota_heladeros.estado = 1, 
+                                    IF(productos.is_litro, FORMAT(nota_heladero_detalle.vendido,2), nota_heladero_detalle.vendido)
+                                , "") as vendido'))
+                                //nota_heladero_detalle.vendido
+
                                 // ->addSelect(DB::raw('
                                 //     IF(nota_heladeros.estado = 4, "", (
                                 //         IF(nota_heladero_detalle.vendido = 0,
