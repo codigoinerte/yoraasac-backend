@@ -296,7 +296,9 @@ class NotaHeladeroController extends Controller
            
         }
 
-        return $this->show($nota_heladero->id);
+        $message = ($parent_id > 0) ? "Las cantidades guardadas han sido registradas" : "El registro fue guardado con exito";
+
+        return $this->show($nota_heladero->id, $message);
     }
 
     /**
@@ -305,7 +307,7 @@ class NotaHeladeroController extends Controller
      * @param  \App\Models\nota_heladero  $nota_heladero
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id, $message = "El registro fue encontrado")
     {
         //$nota_heladero = nota_heladero::find($id);
         $nota_heladero = nota_heladero::query()
@@ -416,7 +418,7 @@ class NotaHeladeroController extends Controller
                             */            
             $nota_heladero["detalle"] = $detalle;
 
-            return $this->response->success($nota_heladero, "El registro fue encontrado");
+            return $this->response->success($nota_heladero, $message);
         }
         else{
             return $this->response->error("El registro no fue encontrado");
@@ -466,7 +468,8 @@ class NotaHeladeroController extends Controller
         $efectivo = $request->input("efectivo")??0;
         $observaciones = $request->input("observaciones")??'';
 
-        $previousEstado = $nota_heladero->estado;
+        $previousEstado = $nota_heladero->estado ?? 0;
+        $previousFechaPago = $nota_heladero->fecha_pago ?? null;
 
         $nota_heladero->estado = $estado_id;
         /*
@@ -483,6 +486,9 @@ class NotaHeladeroController extends Controller
             $nota_heladero->fecha_guardado  = $fecha_operacion;
         }
         else if($estado_id == 1){
+            if(!empty($nota_heladero->fecha_cierre)){
+                $nota_heladero->fecha_pago = date("Y-m-d H:i:s");
+            }            
             $nota_heladero->fecha_cierre = $fecha_operacion;
         }
 
@@ -610,9 +616,19 @@ class NotaHeladeroController extends Controller
             $this->stock->updateMovimientoStock($array_detalle, $idStock);
         }
         
-        return $this->show($id);
-        //return $this->response->success($nota_heladero);
-        //
+        if(($previousEstado == 4 && $estado_id == 2) || $estado_id == 2){
+            $message = "El Pedido se ha registrado";                            // reapertura
+        }else if(($previousEstado == 2 && $estado_id == 3) || $estado_id == 3 ){
+            $message = "Las cantidades guardadas han sido registradas";         // guardado
+        }else if($previousEstado == 3 && $estado_id == 1){
+            $message = "La cuenta ha sido registrada, ahora registre el pago";  // 1er cierre
+        }else if(($previousEstado == 1 && $estado_id == 1) && empty($previousFechaPago) && !empty($nota_heladero->fecha_pago)){
+            $message = "El pago ha sido registrado";                            // 2do cierre - pago
+        }else if(($previousEstado == 1 && $estado_id == 1) && !empty($previousFechaPago) && !empty($nota_heladero->fecha_pago)){
+            $message = "El pago ha sido actualizado";                           // subsiguientes cierres despues del pago
+        }
+
+        return $this->show($id, $message);
     }
 
     /**
