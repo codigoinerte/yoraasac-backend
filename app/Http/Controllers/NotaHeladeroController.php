@@ -297,6 +297,9 @@ class NotaHeladeroController extends Controller
         }
 
         $message = ($parent_id > 0) ? "Las cantidades guardadas han sido registradas" : "El registro fue guardado con exito";
+        if($estado_id == 2){
+            $message = "El Pedido se ha registrado"; // reapertura
+        }
 
         return $this->show($nota_heladero->id, $message);
     }
