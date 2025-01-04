@@ -832,6 +832,31 @@ class NotaHeladeroController extends Controller
         */
     }
 
+    public function queryPago($extraString = ""){
+        return "(
+                    SELECT SUM(nota_heladeros.pago)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $extraString
+                )";
+    }
+    public function queryCuenta($extraString = ""){
+        return "(
+                    SELECT SUM(nota_heladeros.monto+nota_heladeros.cargo_baterias)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $extraString
+                )";
+    }
+    public function queryAhorro($extraString = ""){
+        return "(
+                    SELECT SUM(nota_heladeros.ahorro)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $extraString
+                )";
+    }
+
     public function reporte(Request $request)
     {
         $user_id = $request->input("user_id") ?? '';
@@ -902,6 +927,14 @@ class NotaHeladeroController extends Controller
             FROM  asistencia_apertura as asistencias
             WHERE asistencias.user_id = users.id $queryExtraAsistencia
         )";
+        //Resumen_a_fecha_fin = Pago_acumulado - Cuenta_acumulada + Ahorro_acumulado
+
+        $pago = $this->queryPago();
+        $cuenta = $this->queryCuenta();
+        $ahorro = $this->queryAhorro();
+
+        $resumen = "$pago - ($cuenta + $ahorro)";
+
         $query_string = "
             SELECT
                 users.id,
@@ -913,12 +946,7 @@ class NotaHeladeroController extends Controller
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
                 ) as observaciones,
-                (
-                    SELECT SUM(nota_heladeros.monto+nota_heladeros.cargo_baterias)
-                    FROM nota_heladeros
-                    WHERE nota_heladeros.user_id = users.id
-                    $queryExtra
-                ) as vendido,
+                ".($this->queryPago($queryExtra))." as vendido,
                 (
                     SELECT SUM(nota_heladeros.deuda_anterior)
                     FROM nota_heladeros
@@ -931,12 +959,7 @@ class NotaHeladeroController extends Controller
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
                 ) as total_pagar,
-                (
-                    SELECT SUM(nota_heladeros.pago)
-                    FROM nota_heladeros
-                    WHERE nota_heladeros.user_id = users.id
-                    $queryExtra
-                ) as pago,
+                ".($this->queryCuenta($queryExtra))." as pago,
                 (
                     SELECT SUM(nota_heladeros.debe)
                     FROM nota_heladeros
@@ -949,12 +972,7 @@ class NotaHeladeroController extends Controller
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
                 ) as efectivo,
-                (
-                    SELECT SUM(nota_heladeros.ahorro)
-                    FROM nota_heladeros
-                    WHERE nota_heladeros.user_id = users.id
-                    $queryExtra
-                ) as ahorro,
+                ".($this->queryAhorro($queryExtra))." as ahorro,
                 (
                     SELECT SUM(nota_heladeros.monto+nota_heladeros.ahorro-nota_heladeros.pago)
                     FROM nota_heladeros
@@ -966,7 +984,8 @@ class NotaHeladeroController extends Controller
                     FROM  asistencia_apertura as asistencias
                     WHERE asistencias.user_id = users.id $queryExtraAsistencia
                 ) as dias_asistidos,
-                ROUND( (( $queryAsistencia  * 100) / $days) , 2) as porcentaje_asistencia
+                ROUND( (( $queryAsistencia  * 100) / $days) , 2) as porcentaje_asistencia,
+                resumenReporteNota(users.id) as resumen
             FROM users
             WHERE users.usuario_tipo = 7 $queryExtraUserId
         ";
