@@ -1040,6 +1040,64 @@ class NotaHeladeroController extends Controller
 
     }
 
+    public function resetNotaHeladero(Request $request, $id){
+
+        try {       
+            $nota_heladero_children = nota_heladero::where('parent_id', $id)->first();
+            $estado_children = $nota_heladero_children->estado ?? null;
+            $id_children = $nota_heladero_children->id ?? null;
+                        
+            if(!empty($nota_heladero_children) && $estado_children == 4){
+                $nota = nota_heladero::find($id_children);
+                $nota->delete();
+            }
+        
+            $nota_heladero = nota_heladero::find($id);
+
+            if(empty($nota_heladero))
+            return $this->response->error("No se envio un id valido");
+
+            $nota_heladero->monto           = 0;
+            $nota_heladero->pago            = 0;
+            $nota_heladero->debe            = 0;
+            $nota_heladero->ahorro          = 0;
+            $nota_heladero->yape            = 0;
+            $nota_heladero->efectivo        = 0;
+            $nota_heladero->deuda_anterior  = 0;
+            $nota_heladero->cargo_baterias  = 0;
+            $nota_heladero->estado          = 4;
+            $nota_heladero->observaciones   = null;
+            $nota_heladero->fecha_apertura  = null;
+            $nota_heladero->fecha_guardado  = null;
+            $nota_heladero->fecha_cierre    = null;
+            $nota_heladero->fecha_pago      = null;
+            $nota_heladero->save();
+    
+            $notas_heladero_detalle = NotaHeladeroDetalle::where('nota_heladeros_id', $id)->get();
+            foreach($notas_heladero_detalle as $item){
+                $idchildren = $item->id ?? null;
+
+                if(empty($idchildren)) continue;
+
+                $nota_heladero_detalle = NotaHeladeroDetalle::find($idchildren);
+                $nota_heladero_detalle->pedido           = 0;
+                $nota_heladero_detalle->vendido          = 0;
+                $nota_heladero_detalle->vendido_cantidad = 0;
+                $nota_heladero_detalle->importe          = 0;
+                $nota_heladero_detalle->save();
+            }
+
+            $message = "El registro fue reiniciado con exito";
+            return $this->response->success([], $message);
+       
+        } catch (\Throwable $th) {
+            //throw $th;
+            $message = "Hubo un error al reiniciar el registro, ($th)";
+            return $this->response->error($message);
+        }
+
+    }
+
     public function searchNotaIncomplete(){
 
         $documento = request()->input("documento") ?? null;
