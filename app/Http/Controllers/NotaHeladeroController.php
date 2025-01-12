@@ -1047,9 +1047,14 @@ class NotaHeladeroController extends Controller
             $estado_children = $nota_heladero_children->estado ?? null;
             $id_children = $nota_heladero_children->id ?? null;
                         
-            if(!empty($nota_heladero_children) && $estado_children == 4){
-                $nota = nota_heladero::find($id_children);
-                $nota->delete();
+            if(!empty($nota_heladero_children)){
+                if($estado_children == 4){
+                    $nota = nota_heladero::find($id_children);
+                    $nota->delete();
+                }else{
+                    $message = "No se puede reiniciar la nota, porque hay una nota hija ya inicializada";
+                    return $this->response->error($message);
+                }
             }
         
             $nota_heladero = nota_heladero::find($id);

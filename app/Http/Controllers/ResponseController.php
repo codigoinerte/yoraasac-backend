@@ -9,8 +9,10 @@ class ResponseController extends Controller
     public function error($mensaje)
     {
         return response()->json([
-            'success'=> false,
-            "message"=> $mensaje
+            'success'   => false,
+            'icon' => "warning",
+            'message'   => $mensaje,
+            'title' => "Error!"  
         ], 400);
     }
 
