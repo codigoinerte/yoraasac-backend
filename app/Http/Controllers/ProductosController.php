@@ -65,7 +65,7 @@ class ProductosController extends Controller
             $query->whereDate('productos.created_at', $fecha);
         }
         
-        $data = $query->orderBy('productos.codigo','desc')->get(); //->paginate(10, ['*'], 'page', $page);
+        $data = $query->orderBy('productos.codigo','asc')->get(); //->paginate(10, ['*'], 'page', $page);
 
         //$nextPageUrl = $productos->nextPageUrl();
         //$previousPageUrl = $productos->previousPageUrl();
