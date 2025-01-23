@@ -648,6 +648,26 @@ class NotaHeladeroController extends Controller
         $parent_id = $nota->parent_id ?? null;
         $estado = $nota->estado ?? 0;
 
+        /*
+        asistenciaapertura
+        asistenciacierre
+        */
+
+        $asistencia_delete = request()->input("asistencia_delete") ?? false;
+
+        if($asistencia_delete == true){
+
+           $asistencia_apertura = asistenciaapertura::where('nota_id', $id)->first();
+           if(!empty($asistencia_apertura)){
+                $asistencia_apertura->delete();
+           }
+
+           $asistencia_cierre = asistenciacierre::where('nota_id', $id)->first();
+           if(!empty($asistencia_cierre)){
+                $asistencia_cierre->delete();
+           }
+        }
+
         if(empty($nota)){
             return $this->response->error("No se envio un id valido");
         }
