@@ -9,6 +9,8 @@ use App\Models\productos;
 use App\Models\StockHelados;
 use Illuminate\Http\Request;
 use App\Models\nota_heladero;
+use App\Models\asistenciacierre;
+use App\Models\asistenciaapertura;
 use Illuminate\Support\Facades\DB;
 use App\Models\NotaHeladeroDetalle;
 use Illuminate\Support\Facades\Auth;
