@@ -935,7 +935,12 @@ class NotaHeladeroController extends Controller
         $ahorro = $this->queryAhorro();
 
         $resumen = "$pago - ($cuenta + $ahorro)";
+        /*
+        columna |   reporte nota      |   nota heladero
 
+        vendido |   cuenta acumulada  |   Cuenta (hoy)
+        pago    |   pago acumulado    |   pago
+        */
         $query_string = "
             SELECT
                 users.id,
@@ -947,7 +952,12 @@ class NotaHeladeroController extends Controller
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
                 ) as observaciones,
-                ".($this->queryPago($queryExtra))." as vendido,
+                (
+                    SELECT SUM(nota_heladeros.monto+nota_heladeros.cargo_baterias)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as vendido,
                 (
                     SELECT SUM(nota_heladeros.deuda_anterior)
                     FROM nota_heladeros
@@ -960,7 +970,12 @@ class NotaHeladeroController extends Controller
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
                 ) as total_pagar,
-                ".($this->queryCuenta($queryExtra))." as pago,
+                (
+                    SELECT SUM(nota_heladeros.pago)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as pago,
                 (
                     SELECT SUM(nota_heladeros.debe)
                     FROM nota_heladeros
