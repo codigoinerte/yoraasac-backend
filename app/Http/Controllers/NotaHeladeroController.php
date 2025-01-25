@@ -962,6 +962,10 @@ class NotaHeladeroController extends Controller
 
         vendido |   cuenta acumulada  |   Cuenta (hoy)
         pago    |   pago acumulado    |   pago
+        resumen_fecha_fin | pago_acumulado - cuenta_acumulada + ahorro_acumulado
+        SUM(nota_heladeros.pago) - (nota_heladeros.monto+nota_heladeros.cargo_baterias+nota_heladeros.ahorro)
+
+        (SUM(nota_heladeros.pago) - SUM(nota_heladeros.monto+nota_heladeros.cargo_baterias+nota_heladeros.ahorro))
         */
         $query_string = "
             SELECT
@@ -1010,7 +1014,12 @@ class NotaHeladeroController extends Controller
                     WHERE nota_heladeros.user_id = users.id
                     $queryExtra
                 ) as efectivo,
-                ".($this->queryAhorro($queryExtra))." as ahorro,
+                (
+                    SELECT SUM(nota_heladeros.ahorro)
+                    FROM nota_heladeros
+                    WHERE nota_heladeros.user_id = users.id
+                    $queryExtra
+                ) as ahorro,
                 (
                     SELECT SUM(nota_heladeros.monto+nota_heladeros.ahorro-nota_heladeros.pago)
                     FROM nota_heladeros
