@@ -85,7 +85,8 @@ class NotaHeladeroController extends Controller
         
         if (!empty($nombre) && $nombre !="") {
             
-            $query->where('heladero.name', 'LIKE', "%$nombre%");
+            $query->where(DB::raw("CONCAT(heladero.name,' ', heladero.apellidos)"), 'LIKE', "%$nombre%");
+            
         }        
         
         if(!empty($estado) && $estado != 0){
