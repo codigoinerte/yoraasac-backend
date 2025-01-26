@@ -1138,7 +1138,7 @@ class NotaHeladeroController extends Controller
                     if(empty($idchildren)) continue;
     
                     $nota_heladero_detalle = NotaHeladeroDetalle::find($idchildren);
-                    $nota_heladero_detalle->pedido           = 0;
+                    // $nota_heladero_detalle->pedido           = 0;
                     $nota_heladero_detalle->vendido          = 0;
                     $nota_heladero_detalle->vendido_cantidad = 0;
                     $nota_heladero_detalle->importe          = 0;
