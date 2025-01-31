@@ -720,13 +720,43 @@ class NotaHeladeroController extends Controller
         if($idusuario == 0){
             return $this->response->error("No se envio un id valido");
         }
+        $busqueda = 1;
+        $nota_heladero = nota_heladero::query()
+        ->whereRaw('user_id = ?
+                    AND (
+                            (estado = 2 AND DATE(fecha_apertura) = CURDATE()) OR
+                            (estado = 3 AND DATE(fecha_guardado) = CURDATE()) OR
+                            (estado = 1 AND fecha_pago IS NULL)
+                        )  ', [$idusuario])
+        ->orderBy('created_at','desc')
+        ->first();
 
+        // buscar nota heladero con estado 4 (pendiente)
+        if(empty($nota_heladero)){
+
+            $nota_heladero = nota_heladero::query()
+            ->whereRaw('user_id = ? AND estado = 4 ', [$idusuario])
+            ->orderBy('created_at','desc')
+            ->first();
+            $busqueda = 2;
+        }
+
+        /*
         $nota_heladero = nota_heladero::query()
         ->whereRaw('user_id = ? AND (estado = ? OR estado = ? OR estado = ?) ', [$idusuario, 3, 2 , 4])
         ->orderBy('created_at','desc')
         ->first();
+        */
+
+
+        // return response()->json([
+        //     "data" => $nota_heladero,
+        //     "busqueda" => $busqueda,
+        //     "date" => date("Y-m-d")
+        // ], 200);
         
-        if($nota_heladero)
+        
+        if($nota_heladero && !empty($nota_heladero))
         {
             $id = $nota_heladero->id;
 
