@@ -714,12 +714,15 @@ class NotaHeladeroController extends Controller
 
     public function findNotaGuardada(Request $request)
     {
-
+        /*
+            2: 
+        */
         $idusuario = $request->input("idusuario") ?? 0;
 
         if($idusuario == 0){
             return $this->response->error("No se envio un id valido");
         }
+        //* busqueda para el dia presente
         $busqueda = 1;
         $nota_heladero = nota_heladero::query()
         ->whereRaw('user_id = ?
@@ -731,7 +734,7 @@ class NotaHeladeroController extends Controller
         ->orderBy('created_at','desc')
         ->first();
 
-        // buscar nota heladero con estado 4 (pendiente)
+        //* buscar nota heladero con estado 4 (pendiente) en cualquier momento
         if(empty($nota_heladero)){
 
             $nota_heladero = nota_heladero::query()
@@ -741,6 +744,13 @@ class NotaHeladeroController extends Controller
             $busqueda = 2;
         }
 
+        //* busqueda si ninguna de las anteriores se encontro
+        if(empty($nota_heladero)){
+            $nota_heladero = nota_heladero::query()
+            ->whereRaw('user_id = ? AND fecha_pago IS NULL  ', [$idusuario])
+            ->orderByRaw('FIELD(estado, 1, 3, 2)')
+            ->first();
+        }
         /*
         $nota_heladero = nota_heladero::query()
         ->whereRaw('user_id = ? AND (estado = ? OR estado = ? OR estado = ?) ', [$idusuario, 3, 2 , 4])
