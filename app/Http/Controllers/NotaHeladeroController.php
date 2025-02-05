@@ -1007,6 +1007,9 @@ class NotaHeladeroController extends Controller
         SUM(nota_heladeros.pago) - (nota_heladeros.monto+nota_heladeros.cargo_baterias+nota_heladeros.ahorro)
 
         (SUM(nota_heladeros.pago) - SUM(nota_heladeros.monto+nota_heladeros.cargo_baterias+nota_heladeros.ahorro))
+
+        SUM(nota_heladeros.pago-(nota_heladeros.monto+nota_heladeros.cargo_baterias+nota_heladeros.ahorro)) -- anterior
+        SUM((nota_heladeros.pago-(nota_heladeros.monto+nota_heladeros.cargo_baterias))+nota_heladeros.ahorro) -- correcto
         */
         $query_string = "
             SELECT
