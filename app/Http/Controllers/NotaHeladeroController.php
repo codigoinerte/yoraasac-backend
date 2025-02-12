@@ -724,7 +724,7 @@ class NotaHeladeroController extends Controller
         }
         //* busqueda para el dia presente
         $busqueda = 1;
-        $nota_heladero = nota_heladero::query()
+        $nota_heladero = $this->mainQuerySelect()
         ->whereRaw('user_id = ?
                     AND (
                             (estado = 2 AND DATE(fecha_apertura) = CURDATE()) OR
@@ -737,7 +737,7 @@ class NotaHeladeroController extends Controller
         //* buscar nota heladero con estado 4 (pendiente) en cualquier momento
         if(empty($nota_heladero)){
 
-            $nota_heladero = nota_heladero::query()
+            $nota_heladero = $this->mainQuerySelect()
             ->whereRaw('user_id = ? AND estado = 4 ', [$idusuario])
             ->orderBy('created_at','desc')
             ->first();
@@ -746,7 +746,7 @@ class NotaHeladeroController extends Controller
 
         //* busqueda si ninguna de las anteriores se encontro
         if(empty($nota_heladero)){
-            $nota_heladero = nota_heladero::query()
+            $nota_heladero = $this->mainQuerySelect()
             ->whereRaw('user_id = ? AND fecha_pago IS NULL  ', [$idusuario])
             ->orderByRaw('FIELD(estado, 1, 3, 2)')
             ->first();
@@ -776,7 +776,7 @@ class NotaHeladeroController extends Controller
                             ->orderBy('created_at','desc')
                             ->get();
             */
-
+            //!TODO: falta agregar id_children
             $detalle = NotaHeladeroDetalle::query()
                                 ->leftJoin('productos',  'productos.codigo', '=', 'nota_heladero_detalle.codigo')
                                 ->leftJoin('nota_heladeros',  'nota_heladeros.id', '=', 'nota_heladero_detalle.nota_heladeros_id')
@@ -1303,5 +1303,55 @@ class NotaHeladeroController extends Controller
 
         ], 200);
 
+    }
+
+    public function mainQuerySelect(){
+        return nota_heladero::query()
+        ->leftJoin('users as heladero', 'nota_heladeros.user_id', '=', 'heladero.id')
+                    ->leftJoin('users as creador', 'nota_heladeros.id_usuario', '=', 'creador.id')
+                    ->leftJoin('moneda', 'nota_heladeros.moneda_id', '=', 'moneda.id')
+                    ->leftJoin('sucursals', 'nota_heladeros.id_sucursal', '=', 'sucursals.id')
+                    ->leftJoin('nota_heladero_estados as lestado', 'nota_heladeros.estado', '=', 'lestado.id')
+                    ->select(
+                        "nota_heladeros.codigo",
+                        "nota_heladeros.id",
+                        "nota_heladeros.parent_id",
+                        "nota_heladeros.user_id",
+                        "nota_heladeros.moneda_id",
+                        "nota_heladeros.id_sucursal",
+                        "nota_heladeros.deuda_anterior",                        
+                        "nota_heladeros.monto",
+                        "nota_heladeros.pago",
+                        "nota_heladeros.debe",
+                        "nota_heladeros.ahorro",
+                        "nota_heladeros.cucharas",
+                        "nota_heladeros.conos",
+                        "nota_heladeros.yape",
+                        "nota_heladeros.efectivo",
+                        "nota_heladeros.placas_entregas",
+                        "nota_heladeros.placas_devueltas",
+                        "nota_heladeros.fecha_guardado",
+                        "nota_heladeros.fecha_apertura",
+                        "nota_heladeros.fecha_cierre",
+                        "nota_heladeros.id_usuario",
+                        "nota_heladeros.created_at",
+                        "nota_heladeros.updated_at",
+                        "nota_heladeros.observaciones",
+                        "heladero.documento as heladero_documento",                        
+                        "creador.name",
+                        "sucursals.nombre",
+                        "nota_heladeros.estado",
+                        "lestado.nombre as estado_nombre",
+                        "moneda.moneda"
+                    )
+                    ->addSelect(DB::raw("CONCAT(heladero.name, ' ', heladero.apellidos) as heladero_nombre"))
+                    ->addSelect(DB::raw("(SELECT nota_children.id
+                                            FROM nota_heladeros as nota_children
+                                            WHERE nota_children.parent_id = nota_heladeros.id) as id_children"))
+                    ->addSelect(DB::raw("IF(nota_heladeros.cargo_baterias = 0, (
+                        SELECT sistemas.cargo_baterias
+                        FROM sistemas as sistemas
+                        WHERE id = 1
+                    ), nota_heladeros.cargo_baterias) as cargo_baterias"));
     }
 }
