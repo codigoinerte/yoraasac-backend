@@ -723,34 +723,39 @@ class NotaHeladeroController extends Controller
             return $this->response->error("No se envio un id valido");
         }
         //* busqueda para el dia presente
-        $busqueda = 1;
-        $nota_heladero = $this->mainQuerySelect()
-        ->whereRaw('user_id = ?
-                    AND (
-                            (estado = 2 AND DATE(fecha_apertura) = CURDATE()) OR
-                            (estado = 3 AND DATE(fecha_guardado) = CURDATE()) OR
-                            (estado = 1 AND fecha_pago IS NULL)
-                        )  ', [$idusuario])
-        ->orderBy('created_at','desc')
-        ->first();
+        // $busqueda = 1;
+        // $nota_heladero = $this->mainQuerySelect()
+        // ->whereRaw('user_id = ?
+        //             AND (
+        //                     (estado = 2 AND DATE(fecha_apertura) = CURDATE()) OR
+        //                     (estado = 3 AND DATE(fecha_guardado) = CURDATE()) OR
+        //                     (estado = 1 AND fecha_pago IS NULL)
+        //                 )  ', [$idusuario])
+        // ->orderBy('created_at','desc')
+        // ->first();
 
         //* buscar nota heladero con estado 4 (pendiente) en cualquier momento
-        if(empty($nota_heladero)){
+        // if(empty($nota_heladero)){
 
-            $nota_heladero = $this->mainQuerySelect()
-            ->whereRaw('user_id = ? AND estado = 4 ', [$idusuario])
-            ->orderBy('created_at','desc')
-            ->first();
-            $busqueda = 2;
-        }
+        //     $nota_heladero = $this->mainQuerySelect()
+        //     ->whereRaw('user_id = ? AND estado = 4 ', [$idusuario])
+        //     ->orderBy('created_at','desc')
+        //     ->first();
+        //     $busqueda = 2;
+        // }
 
-        //* busqueda si ninguna de las anteriores se encontro
-        if(empty($nota_heladero)){
-            $nota_heladero = $this->mainQuerySelect()
-            ->whereRaw('user_id = ? AND fecha_pago IS NULL  ', [$idusuario])
-            ->orderByRaw('FIELD(estado, 1, 3, 2)')
-            ->first();
-        }
+        /* cambio de logica para busqueda por estados en orden
+        1: cierre
+        3: guardado
+        2: re-apertura
+        4: pendiente
+        se consulta cualquier documento que no tenga fecha de pago registrada en el orden previamente descrito
+        */
+        $nota_heladero = $this->mainQuerySelect()
+        ->whereRaw('user_id = ? AND fecha_pago IS NULL  ', [$idusuario])
+        ->orderByRaw('FIELD(estado, 1, 3, 2, 4)')
+        ->first();
+        $busqueda = 3;
         /*
         $nota_heladero = nota_heladero::query()
         ->whereRaw('user_id = ? AND (estado = ? OR estado = ? OR estado = ?) ', [$idusuario, 3, 2 , 4])
