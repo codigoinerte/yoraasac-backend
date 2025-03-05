@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\MonedaController;
 use App\Http\Controllers\ResponseController;
 use App\Http\Controllers\StockHeladosController;
+use App\Http\Controllers\StockBarquillosController;
 use App\Http\Requests\NotaHeladero as NotaHeladeroRequest;
 
 class NotaHeladeroController extends Controller
@@ -29,6 +30,7 @@ class NotaHeladeroController extends Controller
     public function __construct(){
         $this->response = new ResponseController();
         $this->stock = new StockHeladosController();
+        $this->stockBarquillos = new StockBarquillosController();
     }
     
     public function index(Request $request)
@@ -230,6 +232,7 @@ class NotaHeladeroController extends Controller
         $nota_heladero["detalle"] = $detalle;
 
         $array_detalle = [];
+        $array_detalle_stock_barquillo = [];
 
         if(count($productos) > 0)
         {
@@ -241,32 +244,62 @@ class NotaHeladeroController extends Controller
                 $vendido = $item["vendido"]??0;
                 $vendido_cantidad = $item["vendido_cantidad"]??0;
                 $importe = $item["importe"]??0;
+                $is_barquillo = $item["is_barquillo"]??0;
                 
-                if($estado_id == 2){
-                    /* re apertura :  salida */
-                    array_push($array_detalle, [
-                        "codigo" => $codigo,
-                        "cantidad" => $devolucion + $pedido
-                    ]);
-                    
-                }else if($estado_id == 3){
-                    /* guardado:  ingreso */
-                    array_push($array_detalle, [
-                        "codigo" => $codigo,
-                        "cantidad" => $devolucion
-                    ]);
-                }else if($estado_id == 1){
-                    /*salida*/
-                    array_push($array_detalle, [
-                        "codigo" => $codigo,
-                        "cantidad" => $vendido
-                    ]);
-                }else if($estado_id == 4){
-                    /*salida*/
-                    array_push($array_detalle, [
-                        "codigo" => $codigo,
-                        "cantidad" => $pedido
-                    ]);
+                if($is_barquillo == 0){
+                    if($estado_id == 2){
+                        /* re apertura :  salida */
+                        array_push($array_detalle, [
+                            "codigo" => $codigo,
+                            "cantidad" => $devolucion + $pedido
+                        ]);
+                        
+                    }else if($estado_id == 3){
+                        /* guardado:  ingreso */
+                        array_push($array_detalle, [
+                            "codigo" => $codigo,
+                            "cantidad" => $devolucion
+                        ]);
+                    }else if($estado_id == 1){
+                        /*salida*/
+                        array_push($array_detalle, [
+                            "codigo" => $codigo,
+                            "cantidad" => $vendido
+                        ]);
+                    }else if($estado_id == 4){
+                        /*salida*/
+                        array_push($array_detalle, [
+                            "codigo" => $codigo,
+                            "cantidad" => $pedido
+                        ]);
+                    }
+                }else{
+                    if($estado_id == 2){
+                        /* re apertura :  salida */
+                        array_push($array_detalle_stock_barquillo, [
+                            "codigo" => $codigo,
+                            "cantidad" => $devolucion + $pedido
+                        ]);
+                        
+                    }else if($estado_id == 3){
+                        /* guardado:  ingreso */
+                        array_push($array_detalle_stock_barquillo, [
+                            "codigo" => $codigo,
+                            "cantidad" => $devolucion
+                        ]);
+                    }else if($estado_id == 1){
+                        /*salida*/
+                        array_push($array_detalle_stock_barquillo, [
+                            "codigo" => $codigo,
+                            "cantidad" => $vendido
+                        ]);
+                    }else if($estado_id == 4){
+                        /*salida*/
+                        array_push($array_detalle_stock_barquillo, [
+                            "codigo" => $codigo,
+                            "cantidad" => $pedido
+                        ]);
+                    }
                 }
             }
         }
@@ -280,8 +313,13 @@ class NotaHeladeroController extends Controller
         $nota_heladero->codigo = $numero_documento;
         $nota_heladero->save();
         
-        if($estado_id  == 2)
-        $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $numero_documento);
+        if($estado_id  == 2){
+            $this->stock->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle, 2, $numero_documento);
+            
+            if(!empty($array_detalle_stock_barquillo)){
+                $this->stockBarquillos->createMovimientoStock("nota", $estado_id, $nota_heladero->id, $heladero_id, $array_detalle_stock_barquillo, 2, $numero_documento);
+            }
+        }
         
         // si existe el id parent y esta activa closeNota, se debe cerrar la nota parent
         if($parent_id > 0 && $closeNota === true){
@@ -383,7 +421,8 @@ class NotaHeladeroController extends Controller
                                     "productos.nombre as producto",
                                     "productos.heladero_precio_venta",
                                     "productos.heladero_descuento",
-                                    "productos.is_litro"
+                                    "productos.is_litro",
+                                    "productos.is_barquillo",
                                 ) //ROUND(nota_heladero_detalle.vendido, 0)
                                 ->addSelect(DB::raw('IF(nota_heladeros.estado = 1, nota_heladero_detalle.importe, "") as importe'))
                                 ->addSelect(DB::raw('IF(nota_heladeros.estado = 1, 
@@ -398,8 +437,15 @@ class NotaHeladeroController extends Controller
                                 //         IF(productos.is_litro, nota_heladero_detalle.vendido, ROUND(nota_heladero_detalle.vendido, 0)  ))
                                 //     ) ) as vendido
                                 // ')) 
-                                ->addSelect(DB::raw("CheckStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))
-                                ->addSelect(DB::raw("getStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci) as stock"))
+                                //->addSelect(DB::raw("CheckStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))
+                                ->addSelect(DB::raw("IF(productos.is_barquillo = 1,
+                                                        CheckStockBarquillos(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta),
+                                                        CheckStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) 
+                                                    ) as stock_alert_input"))
+                                ->addSelect(DB::raw("IF(productos.is_barquillo = 1,
+                                                        getStockBarquillos(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci),
+                                                        getStock(nota_heladero_detalle.codigo COLLATE utf8mb4_unicode_ci)
+                                                    ) as stock"))
                                 ->addSelect(DB::raw('(  
                                         SELECT nd.devolucion 
                                         FROM nota_heladero_detalle as nd 
@@ -409,6 +455,16 @@ class NotaHeladeroController extends Controller
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
                                 ->orderBy('nota_heladero_detalle.codigo','asc')
                                 ->get();
+                                /*
+                                IF(prod.is_barquillo = 1,
+                                    CheckStockBarquillos(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta),
+                                    CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) 
+                                ) as stock_alert_input,
+                                IF(prod.is_barquillo = 1,
+                                    getStockBarquillos(prod.codigo COLLATE utf8mb4_unicode_ci),
+                                    getStock(prod.codigo COLLATE utf8mb4_unicode_ci)
+                                ) as stock
+                                */
 
             foreach($detalle as $key=>$item){
                 $heladero_precio_venta = $item["heladero_precio_venta"] ?? '';
@@ -795,7 +851,8 @@ class NotaHeladeroController extends Controller
                                     "productos.nombre as producto",
                                     "productos.heladero_precio_venta",
                                     "productos.heladero_descuento",
-                                    "productos.is_litro"
+                                    "productos.is_litro",
+                                    "productos.is_barquillo",
                                 )
                                 //nota_heladero_detalle.vendido_cantidad
                                 ->addSelect(DB::raw('
@@ -827,7 +884,14 @@ class NotaHeladeroController extends Controller
                                     LEFT JOIN nota_heladeros nh ON nh.id = nd.nota_heladeros_id
                                     WHERE nd.codigo = nota_heladero_detalle.codigo AND nh.parent_id = nota_heladero_detalle.nota_heladeros_id
                                     ) as devolucion_today'))
-                                ->addSelect(DB::raw("CheckStock(productos.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) as stock_alert_input"))                                
+                                ->addSelect(DB::raw("IF(productos.is_barquillo = 1,
+                                                        CheckStockBarquillos(productos.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta),
+                                                        CheckStock(productos.codigo COLLATE utf8mb4_unicode_ci, productos.stock_alerta) 
+                                                    ) as stock_alert_input"))                                
+                                ->addSelect(DB::raw("IF(productos.is_barquillo = 1,
+                                                        getStockBarquillos(productos.codigo COLLATE utf8mb4_unicode_ci),
+                                                        getStock(productos.codigo COLLATE utf8mb4_unicode_ci)
+                                                    ) as stock"))                                
                                 ->where('nota_heladero_detalle.nota_heladeros_id', $id)
                                 ->orderBy('nota_heladero_detalle.codigo','asc')
                                 ->get();
@@ -884,13 +948,20 @@ class NotaHeladeroController extends Controller
                                 '' as vendido_cantidad,
                                 '' as vendido,
                                 '' as importe,
+                                prod.is_barquillo,
                                 IF(prod.is_litro = 1, '0.00', '0') as devolucion,
-                                CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) as stock_alert_input,
-                                getStock(prod.codigo COLLATE utf8mb4_unicode_ci) as stock
+                                IF(prod.is_barquillo = 1,
+                                    CheckStockBarquillos(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta),
+                                    CheckStock(prod.codigo COLLATE utf8mb4_unicode_ci, prod.stock_alerta) 
+                                ) as stock_alert_input,
+                                IF(prod.is_barquillo = 1,
+                                    getStockBarquillos(prod.codigo COLLATE utf8mb4_unicode_ci),
+                                    getStock(prod.codigo COLLATE utf8mb4_unicode_ci)
+                                ) as stock
                          FROM productos as prod
-                         WHERE estados_id = 1 AND prod.is_barquillo = 0
+                         WHERE estados_id = 1
                          ORDER BY codigo ASC";
-
+        // prod.is_barquillo
         $data = DB::select($query_string);
                     
         return $this->response->success($data);
