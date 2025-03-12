@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\factura;
 use Illuminate\Http\Request;
 use App\Models\FacturaDetalle;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\FacturaRequest;
 use App\Http\Controllers\ResponseController;
@@ -30,45 +31,10 @@ class FacturaController extends Controller
         $fecha = $request->input('fecha') ?? '';
 
         $query = Factura::query()
-                    ->leftJoin('factura_detalle', 'facturas.id', '=', 'factura_detalle.facturas_id')
                     ->leftJoin('users as usuario', 'facturas.user_id', '=', 'usuario.id')
                     ->leftJoin('moneda', 'facturas.id_moneda', '=', 'moneda.id')
                     ->leftJoin('factura_estados as festado', 'facturas.id_estado', '=', 'festado.id')
-                    ->leftJoin('tipo_documentos as nomdoc', 'facturas.tipo', '=', 'nomdoc.id')
-                    /*
-                    ->leftJoin('factura_detalle', 'facturas.id', '=', 'factura_detalle.facturas_id')
-                    ->leftJoin('users as usuario', 'facturas.user_id', '=', 'usuario.id')
-                    ->leftJoin('moneda', 'facturas.id_moneda', '=', 'moneda.id')
-                    ->leftJoin('factura_estados as festado', 'facturas.id_estado', '=', 'festado.id')
-                    ->leftJoin('tipo_documentos as nomdoc', 'facturas.tipo', '=', 'nomdoc.id')
-                    ->select(
-
-                        "facturas.id",
-                        "facturas.codigo",
-                        "facturas.serie",
-                        "facturas.correlativo",
-                        "facturas.user_id",
-                        "facturas.tipo",
-                        "facturas.fecha_pago",
-                        "facturas.id_usuario",
-                        "facturas.created_at",
-                        "facturas.updated_at",
-                        "facturas.sucursals_id",
-                        "facturas.fecha_emision",
-                        "facturas.tipo_transaccion",
-                        "facturas.id_estado",
-                        "facturas.id_moneda",
-                        
-                        "usuario.documento as usuario_documento",
-                        "usuario.name as usuario_nombre",
-                        "festado.estado as estado",
-                        "nomdoc.documento as documento",
-                        "moneda.moneda as moneda",
-                        "(
-                            factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))
-                        ) as total"
-                    ); 
-                    */                   
+                    ->leftJoin('tipo_documentos as nomdoc', 'facturas.tipo', '=', 'nomdoc.id')                 
                     ->selectRaw('
                         
                             facturas.id,
@@ -90,13 +56,9 @@ class FacturaController extends Controller
                             usuario.name as usuario_nombre,
                             festado.estado as estado,
                             nomdoc.documento as documento,
-                            moneda.moneda as moneda,
-                            (
-                                SELECT factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))
-                                FROM factura_detalle
-                                WHERE factura_detalle.facturas_id = facturas.id
-                            ) as total                           
-                        ');
+                            moneda.moneda as moneda                          
+                        ')
+                        ->addSelect(DB::raw("getFacturaTotal(facturas.id) as total"));
                     //->selectRaw('SUM(factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))) as total');
                     
             
@@ -173,6 +135,12 @@ class FacturaController extends Controller
         
         $fecha_emision = $request->input("fecha_emision") ?? '';
         $fecha_pago = $request->input("fecha_pago") ?? '';
+
+        $subtotal = $request->input("subtotal") ?? 0;
+        $descuento = $request->input("descuento") ?? 0;
+        $igv = $request->input("igv") ?? 0;
+        $total = $request->input("total") ?? 0;
+
         $productos = $request->input("productos")??[];
 
         $monedaController = new MonedaController();        
@@ -201,6 +169,13 @@ class FacturaController extends Controller
         $factura->tipo_transaccion= $tipo_transaccion;
         $factura->id_estado       = $id_estado;
         $factura->id_moneda       = $moneda_id;
+        
+        $factura->subtotal        = $subtotal;
+        $factura->descuento       = $descuento;
+        $factura->igv             = $igv;
+        $factura->total           = $total;
+
+
         
         $factura->save();
 
@@ -233,8 +208,10 @@ class FacturaController extends Controller
         }
 
         $factura["detalle"] = $detalle;
+
+        $response = $this->getFacturaQuery($factura->id);
         
-        return $this->response->success($factura);
+        return $this->response->success($response);
     }
 
     /**
@@ -245,6 +222,14 @@ class FacturaController extends Controller
      */
     public function show($id)
     {
+        $response = $this->getFacturaQuery($id);
+        if(empty($response)){
+            return $this->response->error("El registro no fue encontrado");
+        }else{
+            return $this->response->success($response, "El registro fue encontrado");
+        }
+
+        /*
         $nota_heladero = Factura::find($id);
 
         if($nota_heladero)
@@ -274,6 +259,7 @@ class FacturaController extends Controller
         else{
             return $this->response->error("El registro no fue encontrado");
         }
+        */
     }
 
     /**
@@ -310,14 +296,24 @@ class FacturaController extends Controller
         $fecha_emision = $request->input("fecha_emision") ?? '';
         $fecha_pago = $request->input("fecha_pago") ?? '';
         $productos = $request->input("productos")??[];
+        
+        $subtotal = $request->input("subtotal") ?? 0;
+        $descuento = $request->input("descuento") ?? 0;
+        $igv = $request->input("igv") ?? 0;
+        $total = $request->input("total") ?? 0;
 
         $factura->user_id         = $cliente;
         #$factura->tipo            = $tipo;
         $factura->fecha_pago      = $fecha_pago;
         $factura->fecha_emision   = $fecha_emision;
         $factura->tipo_transaccion= $tipo_transaccion;
-        $factura->id_estado       = $id_estado;        
-        
+        $factura->id_estado       = $id_estado;     
+
+        $factura->subtotal        = $subtotal;
+        $factura->descuento       = $descuento;
+        $factura->igv             = $igv;
+        $factura->total           = $total;
+
         $factura->save();
 
         $detalle = [];
@@ -413,8 +409,10 @@ class FacturaController extends Controller
         }
 
         $factura["detalle"] = $detalle;
+
+        $response = $this->getFacturaQuery($factura->id);
         
-        return $this->response->success($factura);
+        return $this->response->success($response);
 
 
     }
@@ -560,5 +558,81 @@ class FacturaController extends Controller
             'data' => $data
 
         ], 200);        
+    }
+
+    public function getFacturaQuery ($id) {
+
+        if(empty($id)) return null;
+
+        $factura = Factura::query()
+                    ->leftJoin('users as cliente', 'facturas.user_id', '=', 'cliente.id')
+                    ->leftJoin('users as creador', 'facturas.id_usuario', '=', 'creador.id')
+                    ->leftJoin('moneda', 'facturas.id_moneda', '=', 'moneda.id')
+                    ->leftJoin('sucursals', 'facturas.sucursals_id', '=', 'sucursals.id')
+                    ->leftJoin('factura_estados as estados', 'facturas.id_estado', '=', 'estados.id')
+                    ->leftJoin('tipo_documentos', 'tipo_documentos.id', '=', 'facturas.tipo')
+                    ->select(
+                        
+                        "facturas.id",
+                        "facturas.codigo",
+                        "facturas.serie",
+                        "facturas.correlativo",
+                        "facturas.user_id",
+                        "facturas.tipo",
+                        "facturas.fecha_pago",
+                        "facturas.id_usuario",
+                        "facturas.created_at",
+                        "facturas.updated_at",
+                        "facturas.sucursals_id",
+                        "facturas.fecha_emision",
+                        "facturas.tipo_transaccion",
+                        "facturas.id_estado",
+                        "facturas.id_moneda",
+                        "facturas.subtotal",
+                        "facturas.descuento",
+                        "facturas.igv",
+                        "facturas.total",
+                        "estados.estado",
+                        "tipo_documentos.documento as documento_tipo",
+
+                        "cliente.documento as usuario_documento",
+
+                        "creador.name as creador",
+                        "sucursals.nombre as sucursal",
+                        
+                        "moneda.moneda"
+                    )
+                    ->addSelect(DB::raw("getFacturaTransaction(facturas.tipo_transaccion) as transaccion"))
+                    ->addSelect(DB::raw("CONCAT(cliente.name, ' ', cliente.apellidos) as usuario_nombre"))
+                    ->addSelect(DB::raw("CONCAT(facturas.codigo, '-', facturas.serie) as documento"))
+                    ->addSelect(DB::raw("getFacturaMonto(facturas.id) as total_monto"))
+                    ->addSelect(DB::raw("getFacturaTotalDescuento(facturas.id) as total_descuento"))                    
+                    ->addSelect(DB::raw("getFacturaTotal(facturas.id) as total"))
+                    ->first();
+
+        if(empty($factura)) return null;
+
+        $detalle = FacturaDetalle::query()                                
+                    ->leftJoin('productos',  'productos.codigo', '=', 'factura_detalle.codigo')
+                    ->select(
+                        "factura_detalle.id",
+                        "factura_detalle.codigo",
+                        "factura_detalle.precio",
+                        "factura_detalle.descuento",
+                        "factura_detalle.cantidad",
+                        "factura_detalle.facturas_id",
+                        "factura_detalle.created_at",
+                        "factura_detalle.updated_at",                        
+                        "productos.nombre as producto"
+                    )
+                    ->addSelect(DB::raw("((factura_detalle.precio * (1 - (factura_detalle.descuento/100))) * factura_detalle.cantidad) as total"))
+                    ->where('factura_detalle.facturas_id', $id)
+                    ->orderBy('factura_detalle.created_at','desc')
+        // ->toSql();
+                    ->get();
+        
+        $factura["detalle"] = $detalle;
+
+        return $factura;
     }
 }
