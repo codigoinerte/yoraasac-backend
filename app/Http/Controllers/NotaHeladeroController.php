@@ -496,7 +496,7 @@ class NotaHeladeroController extends Controller
      */
     public function edit(NotaHeladeroRequest $request, $id)
     {           
-        
+       // 
     }
 
     /**
