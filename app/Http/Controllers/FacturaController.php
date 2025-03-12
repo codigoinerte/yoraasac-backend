@@ -52,13 +52,16 @@ class FacturaController extends Controller
                             facturas.tipo_transaccion,
                             facturas.id_estado,
                             facturas.id_moneda,
+                            facturas.subtotal,
+                            facturas.descuento,
+                            facturas.igv,
+                            facturas.total,
                             usuario.documento as usuario_documento,
                             usuario.name as usuario_nombre,
                             festado.estado as estado,
                             nomdoc.documento as documento,
                             moneda.moneda as moneda                          
-                        ')
-                        ->addSelect(DB::raw("getFacturaTotal(facturas.id) as total"));
+                        ');
                     //->selectRaw('SUM(factura_detalle.cantidad * factura_detalle.precio * (1 - (factura_detalle.descuento/100))) as total');
                     
             
