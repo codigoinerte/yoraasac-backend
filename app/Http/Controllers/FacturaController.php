@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\FacturaRequest;
 use App\Http\Controllers\ResponseController;
+use App\Http\Controllers\StockHeladosController;
 use App\Http\Controllers\SucursalesDocumentosSerieController;
 
 class FacturaController extends Controller
@@ -20,6 +21,7 @@ class FacturaController extends Controller
      */
     public function __construct(){
         $this->response = new ResponseController();
+        $this->stock = new StockHeladosController();
     }
     
     public function index(Request $request)
@@ -182,6 +184,9 @@ class FacturaController extends Controller
         
         $factura->save();
 
+        $array_salida = [];
+        $array_ingreso = [];
+
         $detalle = [];
 
         if(count($productos) > 0)
@@ -206,11 +211,25 @@ class FacturaController extends Controller
                 unset($factura_detalle->updated_at);
                 unset($factura_detalle->created_at);
 
-                array_push($detalle, $factura_detalle);                
+                array_push($detalle, $factura_detalle);
+                
+                array_push($array_salida, [
+                    "codigo" => $codigo,
+                    "cantidad" => $cantidad
+                ]);
             }
         }
 
         $factura["detalle"] = $detalle;
+
+        $stock_movimiento_tipo = $tipo == 1 ? 'boleta_venta' : 'factura_venta';
+        $stock_estado = 0;
+        $stock_id = 0;
+        $stock_movimiento = 0;
+        $heladero_id = $user_creador;
+        $numero_documento = $serie."-".$correlativo;
+
+        $this->stock->createMovimientoStock($stock_movimiento_tipo, $stock_estado, $stock_id, $heladero_id, $array_salida, $stock_movimiento, $numero_documento);
 
         $response = $this->getFacturaQuery($factura->id);
         
@@ -321,6 +340,9 @@ class FacturaController extends Controller
 
         $detalle = [];
 
+        $array_salida = [];
+        $array_ingreso = [];
+
         $factura_actuales = FacturaDetalle::query()
                             ->where("facturas_id", "=", $id)
                             ->get()
@@ -353,8 +375,20 @@ class FacturaController extends Controller
                     $id = $eitem??0;
                     if($id !=0){
 
-                        $factura_detalle_find = FacturaDetalle::where("id", $id)->delete();                        
+                        $factura_detalle_find = FacturaDetalle::find($id)->first();
+                        
+                        $_codigo = $factura_detalle_find->codigo;
+                        $_cantidad = $factura_detalle_find->cantidad;
 
+                        array_push($array_ingreso, [
+                            "codigo" => $_codigo,
+                            "cantidad" => $_cantidad
+                        ]);
+
+                        unset($_codigo);
+                        unset($_cantidad);
+
+                        $factura_detalle_find->delete();                        
                     }
                 }
 
@@ -379,6 +413,11 @@ class FacturaController extends Controller
                     $factura_detalle->precio = $precio;
                     $factura_detalle->descuento = $descuento;
                     $factura_detalle->cantidad = $cantidad;
+
+                    array_push($array_salida, [
+                        "codigo" => $codigo,
+                        "cantidad" => $cantidad
+                    ]);
                     
                     $factura_detalle->save();
 
@@ -399,6 +438,11 @@ class FacturaController extends Controller
                     $factura_detalle->cantidad = $cantidad;
                     $factura_detalle->facturas_id = $factura->id;
 
+                    array_push($array_salida, [
+                        "codigo" => $codigo,
+                        "cantidad" => $cantidad
+                    ]);
+
                     $factura_detalle->save();
 
                     unset($factura_detalle->facturas_id);
@@ -412,6 +456,10 @@ class FacturaController extends Controller
         }
 
         $factura["detalle"] = $detalle;
+
+        $numero_documento = $factura->serie."-".$factura->correlativo;
+        
+        $this->stock->updateMovimientoStockFactura($array_salida, $array_ingreso, $numero_documento);
 
         $response = $this->getFacturaQuery($factura->id);
         
@@ -439,6 +487,8 @@ class FacturaController extends Controller
             return $this->response->error("El usuario no esta autorizado para realizar esta accion");
         }
 
+        $this->stock->eliminarStockByNumeroDocumento($factura->serie."-".$factura->correlativo);
+        
         $factura->delete();
 
         return $this->response->success($factura, "El registro fue eliminado correctamente");

@@ -370,6 +370,17 @@ class StockHeladosController extends Controller
         return $this->response->success($stock, "El registro fue eliminado correctamente");
     }
 
+    public function eliminarStockByNumeroDocumento($numeroDocumento){
+        $stock = StockHelados::where("numero_documento", $numeroDocumento)->first();
+        if(empty($stock)){
+            return $this->response->error("No se encontro el registro");
+        }
+
+        $id = $stock->id;
+
+        return $this->eliminar_stock($id);
+    }
+
     public function createMovimientoStock($tipo, $estado, $iddoc, $iduser, $array_detalle = [], $movimiento = 2, $numero_documento, $isReturn = true){
 
         $movimientos_id = $movimiento;
@@ -486,6 +497,40 @@ class StockHeladosController extends Controller
             $detail->cantidad = $cantidad;
             $detail->save();
         }
+    }
+
+    public function updateMovimientoStockFactura($array_salida, $array_entrada, $numero_documento = null){
+        
+        if(empty($numero_documento)) return null;
+
+        $id = StockHelados::where("numero_documento", $numero_documento)->value("id");
+
+
+        foreach($array_salida as $item){
+            $codigo = $item["codigo"]??'';                
+            $cantidad = $item["cantidad"]??0;
+
+            $detail = StockHeladosDetail::where("codigo", $codigo)
+                                            ->where("stock_helados_id", $id)
+                                            ->first();
+            if(empty($detail)) continue;
+
+            $detail->cantidad = $cantidad;
+            $detail->save();
+        }
+
+        foreach($array_entrada as $item){
+            $codigo = $item["codigo"]??'';                
+            $cantidad = $item["cantidad"]??0;
+
+            $detail = StockHeladosDetail::where("codigo", $codigo)
+                                            ->where("stock_helados_id", $id)
+                                            ->first();
+            if(empty($detail)) continue;
+
+            $detail->delete();
+        }
+
     }
 
     public function getIdFromDocumento($numero_documento, $tipo_documento_id = null, $movimientos_id = null){
