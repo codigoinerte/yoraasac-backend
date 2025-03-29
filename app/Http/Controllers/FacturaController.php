@@ -661,7 +661,9 @@ class FacturaController extends Controller
                     ->addSelect(DB::raw("getFacturaMonto(facturas.id) as total_monto"))
                     ->addSelect(DB::raw("getFacturaTotalDescuento(facturas.id) as total_descuento"))                    
                     ->addSelect(DB::raw("getFacturaTotal(facturas.id) as total"))
+                    ->where('facturas.id', $id)
                     ->first();
+                    //! FALTA EL WHERE
 
         if(empty($factura)) return null;
 
