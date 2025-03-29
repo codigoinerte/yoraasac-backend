@@ -133,6 +133,9 @@ class ProductosController extends Controller
         $igv_id = $request->input("igv_id") ?? 0;
         $cantidad_caja = $request->input("cantidad_caja") ?? 0;
         $proveedor_precio = $request->input("proveedor_precio") ?? 0;
+        
+        $precio_venta_mayor = $request->input("precio_venta_mayor") ?? 0;
+        $descuento_venta_mayor = $request->input("descuento_venta_mayor") ?? 0;
 
         $producto = new Productos();
 
@@ -150,6 +153,8 @@ class ProductosController extends Controller
         $producto->moneda_id = $moneda_id;
         $producto->heladero_precio_venta = $heladero_precio_venta;
         $producto->heladero_descuento = $heladero_descuento;
+        $producto->precio_venta_mayor = $precio_venta_mayor;
+        $producto->descuento_venta_mayor = $descuento_venta_mayor;
         $producto->igv_id = $igv_id;
         $producto->cantidad_caja = $cantidad_caja;
         $producto->proveedor_precio = $proveedor_precio;
@@ -226,6 +231,9 @@ class ProductosController extends Controller
         $is_litro = $request->input("is_litro") ?? 0;
         $is_barquillo = $request->input("is_barquillo") ?? 0;
 
+        $precio_venta_mayor = $request->input("precio_venta_mayor") ?? 0;
+        $descuento_venta_mayor = $request->input("descuento_venta_mayor") ?? 0;
+
         $producto->codigo = $codigo;
         $producto->nombre = $nombre;
         $producto->orden = $orden;
@@ -245,6 +253,8 @@ class ProductosController extends Controller
         $producto->proveedor_precio = $proveedor_precio;
         $producto->is_litro = $is_barquillo === true ? 0 : $is_litro;
         $producto->is_barquillo =  $is_barquillo;
+        $producto->precio_venta_mayor = $precio_venta_mayor;
+        $producto->descuento_venta_mayor = $descuento_venta_mayor;
 
         $producto->save();
 
