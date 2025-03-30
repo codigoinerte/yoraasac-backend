@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\productos;
 use Illuminate\Http\Request;
 use App\Models\BuscarProducto;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ResponseController;
 
 class BuscarProductoController extends Controller
@@ -21,6 +22,7 @@ class BuscarProductoController extends Controller
     public function index(Request $request)
     {
         $producto = $request->input('producto') ?? '';
+        $type = $request->input('type') ?? 0;
 
         if($producto == ""){
             return $this->response->success($producto, "No se envio un nombre valido");
@@ -35,8 +37,6 @@ class BuscarProductoController extends Controller
                             "productos.nombre",
                             "productos.orden",
                             "productos.stock_alerta",
-                            "productos.precio_venta",
-                            "productos.descuento",
                             "productos.destacado",
                             "productos.estados_id",
                             "productos.unspsc_id",
@@ -52,6 +52,25 @@ class BuscarProductoController extends Controller
                             "productos.created_at",
                             "productos.updated_at",
         );
+
+        /*
+        type 1: precio por mayor
+        type 2: precio heladero
+        type any/0: precio normal 
+        */
+        if($type == 1){            
+            $query
+                ->addSelect(DB::raw('productos.precio_venta_mayor as precio_venta'))
+                ->addSelect(DB::raw('productos.descuento_venta_mayor as descuento'));
+        }else if($type == 2){            
+            $query
+                ->addSelect(DB::raw('productos.heladero_precio_venta as precio_venta'))
+                ->addSelect(DB::raw('productos.heladero_descuento as descuento'));
+        }else{
+            $query
+                ->addSelect(DB::raw('productos.precio_venta as precio_venta'))
+                ->addSelect(DB::raw('productos.descuento as descuento'));
+        }
                            
         $query->where('productos.codigo', 'like',"%$producto%")
                 ->orWhere('productos.nombre', 'like',"%$producto%");
