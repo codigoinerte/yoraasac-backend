@@ -137,6 +137,8 @@ class FacturaController extends Controller
         $tipo_transaccion = $request->input("tipo_transaccion") ?? 0;        
         $cliente = $request->input("user_id") ?? 0;        
         $id_estado = $request->input("estado") ?? 0;
+
+        $precio_tipo = $request->input("precio_tipo") ?? 0;
         
         $fecha_emision = $request->input("fecha_emision") ?? '';
         $fecha_pago = $request->input("fecha_pago") ?? '';
@@ -173,6 +175,7 @@ class FacturaController extends Controller
         $factura->fecha_emision   = $fecha_emision;
         $factura->tipo_transaccion= $tipo_transaccion;
         $factura->id_estado       = $id_estado;
+        $factura->precio_tipo       = $precio_tipo;
         $factura->id_moneda       = $moneda_id;
         
         $factura->subtotal        = $subtotal;
@@ -314,6 +317,7 @@ class FacturaController extends Controller
         $tipo_transaccion = $request->input("tipo_transaccion") ?? 0;        
         $cliente = $request->input("user_id") ?? 0;        
         $id_estado = $request->input("estado") ?? 0;
+        $precio_tipo = $request->input("precio_tipo") ?? 0;
         
         $fecha_emision = $request->input("fecha_emision") ?? '';
         $fecha_pago = $request->input("fecha_pago") ?? '';
@@ -329,7 +333,8 @@ class FacturaController extends Controller
         $factura->fecha_pago      = $fecha_pago;
         $factura->fecha_emision   = $fecha_emision;
         $factura->tipo_transaccion= $tipo_transaccion;
-        $factura->id_estado       = $id_estado;     
+        $factura->id_estado       = $id_estado;
+        $factura->precio_tipo       = $precio_tipo;
 
         $factura->subtotal        = $subtotal;
         $factura->descuento       = $descuento;
@@ -645,6 +650,7 @@ class FacturaController extends Controller
                         "facturas.descuento",
                         "facturas.igv",
                         "facturas.total",
+                        "facturas.precio_tipo",
                         "estados.estado",
                         "tipo_documentos.documento as documento_tipo",
 
