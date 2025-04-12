@@ -9,6 +9,7 @@ use App\Models\productos;
 use App\Models\StockHelados;
 use Illuminate\Http\Request;
 use App\Models\nota_heladero;
+use App\Models\StockBarquillos;
 use App\Models\asistenciacierre;
 use App\Models\asistenciaapertura;
 use Illuminate\Support\Facades\DB;
@@ -734,6 +735,20 @@ class NotaHeladeroController extends Controller
         $auth_tipo = Auth::user()->usuario_tipo;
         if($auth_tipo !=  1 && $auth_tipo != 2){
             return $this->response->error("El usuario no esta autorizado para realizar esta accion");
+        }
+        /* ingresar logica para devolver barquillos al eliminar */
+        $stockBarquillos = new StockBarquillosController();
+        if(!empty($numero_documento)){
+            $stockBarquillosList = StockBarquillos::where('numero_documento', $numero_documento)->get();
+            if(count($stockBarquillosList) > 0){
+                foreach($stockBarquillosList as $item){
+                    $_id = $item->id ?? null;
+
+                    if(empty($_id)) continue;
+                    
+                    $stockBarquillos->eliminar_stock($_id);
+                }
+            }
         }
 
         /* ingresar logica para devolver a almacen cuando la nota no sea cerrada */
