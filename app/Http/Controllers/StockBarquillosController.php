@@ -579,4 +579,54 @@ class StockBarquillosController extends Controller
             return null;
         }
     }
+
+    public function updateMovimientoStockFactura($array_salida, $array_entrada, $numero_documento = null){
+        
+        if(empty($numero_documento)) return null;
+
+        $id = StockBarquillos::where("numero_documento", $numero_documento)->value("id");
+
+
+        foreach($array_salida as $item){
+            $codigo = $item["codigo"]??'';                
+            $cantidad = $item["cantidad"]??0;
+
+            $detail = StockBarquillosDetail::where("codigo", $codigo)
+                                            ->where("stock_helados_id", $id)
+                                            ->first();
+            if(empty($detail)) continue;
+
+            $detail->cantidad = $cantidad;
+            $detail->save();
+        }
+
+        foreach($array_entrada as $item){
+            $codigo = $item["codigo"]??'';                
+            $cantidad = $item["cantidad"]??0;
+
+            $detail = StockBarquillosDetail::where("codigo", $codigo)
+                                            ->where("stock_helados_id", $id)
+                                            ->first();
+            if(empty($detail)) continue;
+
+            $detail->delete();
+        }
+
+    }
+
+    public function eliminarStockByCodigo($codigo_documento, $codigo_producto){
+        $stock = StockBarquillos::where("numero_documento", $codigo_documento)->first();
+        if(empty($stock)) return null;
+
+        $idStock = $stock->id;
+
+        $stock_detalle = StockBarquillosDetail::where("codigo", $codigo_producto)
+                                                ->where("stock_barquillos_id", $idStock)
+                                                ->first();
+        if(empty($stock_detalle)) return null;
+
+        $stock_detalle->delete();
+
+        return $this->response->success($stock_detalle, "El registro fue eliminado correctamente");
+    }
 }
