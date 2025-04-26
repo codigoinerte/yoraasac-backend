@@ -22,6 +22,7 @@ class FacturaController extends Controller
     public function __construct(){
         $this->response = new ResponseController();
         $this->stock = new StockHeladosController();
+        $this->stockBarquillos = new StockBarquillosController();
     }
     
     public function index(Request $request)
@@ -143,12 +144,17 @@ class FacturaController extends Controller
         $fecha_emision = $request->input("fecha_emision") ?? '';
         $fecha_pago = $request->input("fecha_pago") ?? '';
 
+        $cargo_baterias = $request->input("cargo_baterias") ?? 0;
+        $deuda_anterior = $request->input("deuda_anterior") ?? 0;
         $subtotal = $request->input("subtotal") ?? 0;
         $descuento = $request->input("descuento") ?? 0;
         $igv = $request->input("igv") ?? 0;
         $total = $request->input("total") ?? 0;
 
         $productos = $request->input("productos")??[];
+        
+        $from = $request->input("importado_tipo")??0;
+        $from_id = $request->input("importado_codigo")??null;
 
         $monedaController = new MonedaController();        
         $moneda_id = $monedaController->getMonedaPrincipal()->id ?? 1;
@@ -175,15 +181,21 @@ class FacturaController extends Controller
         $factura->fecha_emision   = $fecha_emision;
         $factura->tipo_transaccion= $tipo_transaccion;
         $factura->id_estado       = $id_estado;
-        $factura->precio_tipo       = $precio_tipo;
+        $factura->precio_tipo     = $precio_tipo;
         $factura->id_moneda       = $moneda_id;
         
+        $factura->cargo_baterias  = $cargo_baterias;
+        $factura->deuda_anterior  = $deuda_anterior;
         $factura->subtotal        = $subtotal;
         $factura->descuento       = $descuento;
         $factura->igv             = $igv;
         $factura->total           = $total;
 
+        $importado_tipo = 0;
+        if($from == "nota") $importado_tipo = 1;
 
+        $factura->importado_tipo = $importado_tipo;
+        $factura->importado_codigo = $from_id;
         
         $factura->save();
 
@@ -200,7 +212,8 @@ class FacturaController extends Controller
                 $precio = $item["precio"]??0;
                 $descuento = $item["descuento"]??0;
                 $cantidad = $item["cantidad"]??0;
-                
+                $is_barquillo = $item["is_barquillo"]??0;
+
                 $factura_detalle = new FacturaDetalle();
 
                 $factura_detalle->codigo = $codigo;
@@ -215,7 +228,7 @@ class FacturaController extends Controller
                 unset($factura_detalle->created_at);
 
                 array_push($detalle, $factura_detalle);
-                
+
                 array_push($array_salida, [
                     "codigo" => $codigo,
                     "cantidad" => $cantidad
@@ -232,7 +245,9 @@ class FacturaController extends Controller
         $heladero_id = $user_creador;
         $numero_documento = $serie."-".$correlativo;
 
-        $this->stock->createMovimientoStock($stock_movimiento_tipo, $stock_estado, $stock_id, $heladero_id, $array_salida, $stock_movimiento, $numero_documento);
+        if(empty($from_id)){
+            $this->stock->createMovimientoStock($stock_movimiento_tipo, $stock_estado, $stock_id, $heladero_id, $array_salida, $stock_movimiento, $numero_documento);
+        }
 
         $response = $this->getFacturaQuery($factura->id);
         
@@ -313,6 +328,12 @@ class FacturaController extends Controller
             return $this->response->error("No se envio un id valido");
         }
 
+        $serie = $factura->serie ?? '';
+        $correlativo = $factura->correlativo ?? '';
+        $importado_tipo = $factura->importado_tipo ?? '';
+        $importado_codigo = $factura->importado_codigo ?? '';
+        $codigo_documento = "$serie-$correlativo";
+
         $tipo = $request->input("tipo") ?? 0;        
         $tipo_transaccion = $request->input("tipo_transaccion") ?? 0;        
         $cliente = $request->input("user_id") ?? 0;        
@@ -327,6 +348,9 @@ class FacturaController extends Controller
         $descuento = $request->input("descuento") ?? 0;
         $igv = $request->input("igv") ?? 0;
         $total = $request->input("total") ?? 0;
+
+        $from = $request->input("importado_tipo")??0;
+        $from_id = $request->input("importado_codigo")??null;
 
         $factura->user_id         = $cliente;
         #$factura->tipo            = $tipo;
@@ -347,7 +371,8 @@ class FacturaController extends Controller
 
         $array_salida = [];
         $array_ingreso = [];
-
+        $array_detalle_stock_barquillo = [];
+        
         $factura_actuales = FacturaDetalle::query()
                             ->where("facturas_id", "=", $id)
                             ->get()
@@ -359,15 +384,20 @@ class FacturaController extends Controller
         {
             
             foreach($productos as $ritem){
+                $codigo = $ritem["codigo"]??'';
                 $rid = $ritem["id"]??'';
+                $is_barquillo = $ritem["is_barquillo"]??'';
 
                 foreach($factura_actuales as $lkey => $litem){
                     $lid = $litem["id"]??'';
 
-                    if($rid == $lid && $lid!='' && $rid !=''){
-                        
+                    if($rid == $lid && $lid!='' && $rid !=''){                        
+                        /* eliminar elemento de la lista de stock de barquillos y stockhelados */
+                        if(empty($from_id)){
+                            $this->stock->eliminarStockByCodigo($codigo_documento, $codigo);
+                        }
+                        /* eliminar elemento de la lista de stock de barquillos y stockhelados */
                         unset($factura_actuales[$lkey]);
-
                     }
 
                 }
@@ -385,7 +415,7 @@ class FacturaController extends Controller
                         $_codigo = $factura_detalle_find->codigo;
                         $_cantidad = $factura_detalle_find->cantidad;
 
-                        array_push($array_ingreso, [
+                        array_push($array_salida, [
                             "codigo" => $_codigo,
                             "cantidad" => $_cantidad
                         ]);
@@ -409,6 +439,7 @@ class FacturaController extends Controller
                 $precio = $item["precio"]??0;
                 $descuento = $item["descuento"]??0;
                 $cantidad = $item["cantidad"]??0;
+                $is_barquillo = $item["is_barquillo"]??0;
                 
                 $factura_detalle = FacturaDetalle::find($id);
 
@@ -419,7 +450,7 @@ class FacturaController extends Controller
                     $factura_detalle->descuento = $descuento;
                     $factura_detalle->cantidad = $cantidad;
 
-                    array_push($array_salida, [
+                    array_push($array_ingreso, [
                         "codigo" => $codigo,
                         "cantidad" => $cantidad
                     ]);
@@ -443,7 +474,7 @@ class FacturaController extends Controller
                     $factura_detalle->cantidad = $cantidad;
                     $factura_detalle->facturas_id = $factura->id;
 
-                    array_push($array_salida, [
+                    array_push($array_ingreso, [
                         "codigo" => $codigo,
                         "cantidad" => $cantidad
                     ]);
@@ -463,8 +494,18 @@ class FacturaController extends Controller
         $factura["detalle"] = $detalle;
 
         $numero_documento = $factura->serie."-".$factura->correlativo;
-        
-        $this->stock->updateMovimientoStockFactura($array_salida, $array_ingreso, $numero_documento);
+
+        /*
+        return $this->response->success([
+            "salida" => $array_salida,
+            "ingreso" => $array_ingreso,
+            "documento" => $numero_documento
+        ]);
+        */
+    
+        if(empty($from_id)){
+            $this->stock->updateMovimientoStockFactura($array_salida, $array_ingreso, $numero_documento);
+        }        
 
         $response = $this->getFacturaQuery($factura->id);
         
@@ -651,6 +692,9 @@ class FacturaController extends Controller
                         "facturas.igv",
                         "facturas.total",
                         "facturas.precio_tipo",
+                        "facturas.cargo_baterias",
+                        "facturas.deuda_anterior",
+
                         "estados.estado",
                         "tipo_documentos.documento as documento_tipo",
 
@@ -661,6 +705,10 @@ class FacturaController extends Controller
                         
                         "moneda.moneda"
                     )
+
+                    ->addSelect(DB::raw("importado_tipo"))
+                    ->addSelect(DB::raw("importado_codigo"))
+
                     ->addSelect(DB::raw("getFacturaTransaction(facturas.tipo_transaccion) as transaccion"))
                     ->addSelect(DB::raw("CONCAT(cliente.name, ' ', cliente.apellidos) as usuario_nombre"))
                     ->addSelect(DB::raw("CONCAT(facturas.codigo, '-', facturas.serie) as documento"))
@@ -684,7 +732,9 @@ class FacturaController extends Controller
                         "factura_detalle.facturas_id",
                         "factura_detalle.created_at",
                         "factura_detalle.updated_at",                        
-                        "productos.nombre as producto"
+                        "productos.nombre as producto",
+                        "productos.is_litro",
+                        "productos.is_barquillo",
                     )
                     ->addSelect(DB::raw("((factura_detalle.precio * (1 - (factura_detalle.descuento/100))) * factura_detalle.cantidad) as total"))
                     ->where('factura_detalle.facturas_id', $id)
