@@ -515,20 +515,18 @@ class StockHeladosController extends Controller
                                             ->first();
             if(empty($detail)) continue;
 
-            $detail->cantidad = $cantidad;
-            $detail->save();
+            $detail->delete();
         }
 
         foreach($array_entrada as $item){
             $codigo = $item["codigo"]??'';                
             $cantidad = $item["cantidad"]??0;
 
-            $detail = StockHeladosDetail::where("codigo", $codigo)
-                                            ->where("stock_helados_id", $id)
-                                            ->first();
-            if(empty($detail)) continue;
-
-            $detail->delete();
+            $newDetail = new StockHeladosDetail();
+            $newDetail->codigo = $codigo;
+            $newDetail->stock_helados_id = $id;
+            $newDetail->cantidad = $cantidad;
+            $newDetail->save();
         }
 
     }
@@ -623,5 +621,25 @@ class StockHeladosController extends Controller
         }else{
             return null;
         }
+    }
+
+    public function eliminarStockByCodigo($codigo_documento, $codigo_producto){
+        $stock = StockHelados::where("numero_documento", $codigo_documento)->first();
+        if(empty($stock)){
+            return $this->response->error("No se encontro el registro");
+        }
+
+        $id = $stock->id;
+
+        $stock_detalle = StockHeladosDetail::where("codigo", $codigo_producto)
+                                            ->where("stock_helados_id", $id)
+                                            ->first();
+        if(empty($stock_detalle)){
+            return $this->response->error("No se encontro el detalle");
+        }
+
+        $stock_detalle->delete();
+
+        return $this->response->success($stock_detalle, "El detalle fue eliminado correctamente");
     }
 }
