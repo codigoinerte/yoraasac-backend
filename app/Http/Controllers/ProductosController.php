@@ -137,6 +137,9 @@ class ProductosController extends Controller
         $precio_venta_mayor = $request->input("precio_venta_mayor") ?? 0;
         $descuento_venta_mayor = $request->input("descuento_venta_mayor") ?? 0;
 
+        $precio_venta_mayor_cajas = $request->input("precio_venta_mayor_cajas") ?? 0;
+        $descuento_venta_mayor_cajas = $request->input("descuento_venta_mayor_cajas") ?? 0;
+
         $producto = new Productos();
 
         $producto->codigo = $codigo;
@@ -155,6 +158,8 @@ class ProductosController extends Controller
         $producto->heladero_descuento = $heladero_descuento;
         $producto->precio_venta_mayor = $precio_venta_mayor;
         $producto->descuento_venta_mayor = $descuento_venta_mayor;
+        $producto->precio_venta_mayor_cajas = $precio_venta_mayor_cajas;
+        $producto->descuento_venta_mayor_cajas = $descuento_venta_mayor_cajas;
         $producto->igv_id = $igv_id;
         $producto->cantidad_caja = $cantidad_caja;
         $producto->proveedor_precio = $proveedor_precio;
@@ -234,6 +239,9 @@ class ProductosController extends Controller
         $precio_venta_mayor = $request->input("precio_venta_mayor") ?? 0;
         $descuento_venta_mayor = $request->input("descuento_venta_mayor") ?? 0;
 
+        $precio_venta_mayor_cajas = $request->input("precio_venta_mayor_cajas") ?? 0;
+        $descuento_venta_mayor_cajas = $request->input("descuento_venta_mayor_cajas") ?? 0;
+
         $producto->codigo = $codigo;
         $producto->nombre = $nombre;
         $producto->orden = $orden;
@@ -255,6 +263,8 @@ class ProductosController extends Controller
         $producto->is_barquillo =  $is_barquillo;
         $producto->precio_venta_mayor = $precio_venta_mayor;
         $producto->descuento_venta_mayor = $descuento_venta_mayor;
+        $producto->precio_venta_mayor_cajas = $precio_venta_mayor_cajas;
+        $producto->descuento_venta_mayor_cajas = $descuento_venta_mayor_cajas;
 
         $producto->save();
 
