@@ -213,6 +213,7 @@ class FacturaController extends Controller
                 $descuento = $item["descuento"]??0;
                 $cantidad = $item["cantidad"]??0;
                 $is_barquillo = $item["is_barquillo"]??0;
+                $is_box = $item["is_box"]??0;
 
                 $factura_detalle = new FacturaDetalle();
 
@@ -221,6 +222,7 @@ class FacturaController extends Controller
                 $factura_detalle->descuento = $descuento;
                 $factura_detalle->cantidad = $cantidad;
                 $factura_detalle->facturas_id = $factura->id;
+                $factura_detalle->is_box = $is_box;
                 $factura_detalle->save();
 
                 unset($factura_detalle->facturas_id);
@@ -231,7 +233,8 @@ class FacturaController extends Controller
 
                 array_push($array_salida, [
                     "codigo" => $codigo,
-                    "cantidad" => $cantidad
+                    "cantidad" => $cantidad,
+                    "is_box" => $is_box
                 ]);
             }
         }
@@ -440,6 +443,7 @@ class FacturaController extends Controller
                 $descuento = $item["descuento"]??0;
                 $cantidad = $item["cantidad"]??0;
                 $is_barquillo = $item["is_barquillo"]??0;
+                $is_box = $item["is_box"]??0;
                 
                 $factura_detalle = FacturaDetalle::find($id);
 
@@ -449,10 +453,12 @@ class FacturaController extends Controller
                     $factura_detalle->precio = $precio;
                     $factura_detalle->descuento = $descuento;
                     $factura_detalle->cantidad = $cantidad;
+                    $factura_detalle->is_box = $is_box;
 
                     array_push($array_ingreso, [
                         "codigo" => $codigo,
-                        "cantidad" => $cantidad
+                        "cantidad" => $cantidad,
+                        "is_box" => $is_box
                     ]);
                     
                     $factura_detalle->save();
@@ -472,11 +478,13 @@ class FacturaController extends Controller
                     $factura_detalle->precio = $precio;
                     $factura_detalle->descuento = $descuento;
                     $factura_detalle->cantidad = $cantidad;
+                    $factura_detalle->is_box = $is_box;
                     $factura_detalle->facturas_id = $factura->id;
 
                     array_push($array_ingreso, [
                         "codigo" => $codigo,
-                        "cantidad" => $cantidad
+                        "cantidad" => $cantidad,
+                        "is_box" => $is_box
                     ]);
 
                     $factura_detalle->save();
@@ -729,6 +737,7 @@ class FacturaController extends Controller
                         "factura_detalle.precio",
                         "factura_detalle.descuento",
                         "factura_detalle.cantidad",
+                        "factura_detalle.is_box",
                         "factura_detalle.facturas_id",
                         "factura_detalle.created_at",
                         "factura_detalle.updated_at",                        
