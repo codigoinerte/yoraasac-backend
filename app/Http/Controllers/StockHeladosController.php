@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\StockHelados;
 use Illuminate\Http\Request;
+use App\Models\nota_heladero;
 use App\Models\StockHeladosDetail;
 use App\Models\NotaHeladeroDetalle;
-use App\Models\nota_heladero;
+use App\Models\productos;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ResponseController;
 use App\Http\Controllers\Request\StockHelados as StockHeladosRequest;
@@ -458,12 +459,26 @@ class StockHeladosController extends Controller
             {
                 $codigo = $item["codigo"]??'';                
                 $cantidad = $item["cantidad"]??0;
+                $is_box = $item["is_box"]??0;
 
                 $newDetail = new StockHeladosDetail();
 
                 $newDetail->codigo = $codigo;
                 $newDetail->stock_helados_id = $idStock;
-                $newDetail->cantidad = $cantidad;
+                if($is_box == true){
+                    $productDetail = Productos::where("codigo", $codigo)->first();
+                    $cantidad_caja = $productDetail->cantidad_caja ?? 0;
+
+                    $cantidad_unidad = $cantidad_caja * $cantidad;
+
+                    $newDetail->caja_cantidad = $cantidad_caja;
+                    $newDetail->caja     = $cantidad;
+                    $newDetail->cantidad = $cantidad_unidad;
+
+                }else{
+                    $newDetail->cantidad = $cantidad;
+                }
+                
 
                 $newDetail->save();
 
@@ -521,11 +536,26 @@ class StockHeladosController extends Controller
         foreach($array_entrada as $item){
             $codigo = $item["codigo"]??'';                
             $cantidad = $item["cantidad"]??0;
+            $is_box = $item["is_box"]??0;
 
             $newDetail = new StockHeladosDetail();
             $newDetail->codigo = $codigo;
             $newDetail->stock_helados_id = $id;
-            $newDetail->cantidad = $cantidad;
+            
+            if($is_box == true){
+                $productDetail = Productos::where("codigo", $codigo)->first();
+                $cantidad_caja = $productDetail->cantidad_caja ?? 0;
+
+                $cantidad_unidad = $cantidad_caja * $cantidad;
+
+                $newDetail->caja_cantidad = $cantidad_caja;
+                $newDetail->caja     = $cantidad;
+                $newDetail->cantidad = $cantidad_unidad;
+
+            }else{
+                $newDetail->cantidad = $cantidad;
+            }
+            
             $newDetail->save();
         }
 
