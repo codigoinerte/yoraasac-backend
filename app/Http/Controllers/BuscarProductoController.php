@@ -61,15 +61,30 @@ class BuscarProductoController extends Controller
         if($type == 1){            
             $query
                 ->addSelect(DB::raw('productos.precio_venta_mayor as precio_venta'))
-                ->addSelect(DB::raw('productos.descuento_venta_mayor as descuento'));
+                ->addSelect(DB::raw('productos.descuento_venta_mayor as descuento'))
+
+                ->addSelect(DB::raw('productos.precio_venta_mayor_cajas as precio_venta_cajas'))
+                ->addSelect(DB::raw('productos.descuento_venta_mayor_cajas as descuento_cajas'))
+                
+                ->addSelect(DB::raw('1 as is_unit'));
         }else if($type == 2){            
             $query
                 ->addSelect(DB::raw('productos.heladero_precio_venta as precio_venta'))
-                ->addSelect(DB::raw('productos.heladero_descuento as descuento'));
+                ->addSelect(DB::raw('productos.heladero_descuento as descuento'))
+
+                ->addSelect(DB::raw('productos.precio_venta_mayor_cajas as precio_venta_cajas'))
+                ->addSelect(DB::raw('productos.descuento_venta_mayor_cajas as descuento_cajas'))
+                
+                ->addSelect(DB::raw('1 as is_unit'));
         }else{
             $query
                 ->addSelect(DB::raw('productos.precio_venta as precio_venta'))
-                ->addSelect(DB::raw('productos.descuento as descuento'));
+                ->addSelect(DB::raw('productos.descuento as descuento'))
+
+                ->addSelect(DB::raw('productos.precio_venta_mayor_cajas as precio_venta_cajas'))
+                ->addSelect(DB::raw('productos.descuento_venta_mayor_cajas as descuento_cajas'))
+                
+                ->addSelect(DB::raw('1 as is_unit'));
         }
                            
         $query->where('productos.codigo', 'like',"%$producto%")
