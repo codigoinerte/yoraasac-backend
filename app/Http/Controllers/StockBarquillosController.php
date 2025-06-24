@@ -585,31 +585,47 @@ class StockBarquillosController extends Controller
         if(empty($numero_documento)) return null;
 
         $id = StockBarquillos::where("numero_documento", $numero_documento)->value("id");
+        if(empty($id)) return null;
 
-
+        // Procesar salidas (sumar cantidad)
         foreach($array_salida as $item){
-            $codigo = $item["codigo"]??'';                
+            $codigo = $item["codigo"]??'';
             $cantidad = $item["cantidad"]??0;
 
             $detail = StockBarquillosDetail::where("codigo", $codigo)
-                                            ->where("stock_helados_id", $id)
-                                            ->first();
-            if(empty($detail)) continue;
-
-            $detail->cantidad = $cantidad;
-            $detail->save();
-        }
-
-        foreach($array_entrada as $item){
-            $codigo = $item["codigo"]??'';                
-            $cantidad = $item["cantidad"]??0;
-
-            $detail = StockBarquillosDetail::where("codigo", $codigo)
-                                            ->where("stock_helados_id", $id)
+                                            ->where("stock_barquillos_id", $id)
                                             ->first();
             if(empty($detail)) continue;
 
             $detail->delete();
+        }
+
+        // Procesar entradas (restar cantidad)
+        foreach($array_entrada as $item){
+            $codigo = $item["codigo"]??'';
+            $cantidad = $item["cantidad"]??0;
+            $is_box = $item["is_box"]??0;
+
+            $newDetail = new StockBarquillosDetail();
+            $newDetail->codigo = $codigo;
+            $newDetail->stock_barquillos_id = $id;
+
+            if($is_box == true){
+
+                $productDetail = Productos::where("codigo", $codigo)->first();
+                $cantidad_caja = $productDetail->cantidad_caja ?? 0;
+
+                $cantidad_unidad = $cantidad_caja * $cantidad;
+
+                $newDetail->caja_cantidad = $cantidad_caja;
+                $newDetail->caja     = $cantidad;
+                $newDetail->cantidad = $cantidad_unidad;
+
+            }else{
+                $newDetail->cantidad = $cantidad;
+            }
+
+            $newDetail->save();
         }
 
     }
@@ -628,5 +644,16 @@ class StockBarquillosController extends Controller
         $stock_detalle->delete();
 
         return $this->response->success($stock_detalle, "El registro fue eliminado correctamente");
+    }
+
+
+    public function eliminarStockByNumeroDocumento($numeroDocumento){
+        $stock = StockBarquillos::where("numero_documento", $numeroDocumento)->first();
+        if(empty($stock)){
+            return $this->response->error("No se encontro el registro");
+        }
+
+        $id = $stock->id;
+        return $this->eliminar_stock($id);
     }
 }

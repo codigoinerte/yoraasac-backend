@@ -8,6 +8,7 @@ use App\Models\FacturaDetalle;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\FacturaRequest;
+use App\Models\productos;
 use App\Http\Controllers\ResponseController;
 use App\Http\Controllers\StockHeladosController;
 use App\Http\Controllers\SucursalesDocumentosSerieController;
@@ -199,7 +200,9 @@ class FacturaController extends Controller
         
         $factura->save();
 
-        $array_salida = [];
+        $array_stock_helados = [];
+        $array_stock_barquillos = [];
+
         $array_ingreso = [];
 
         $detalle = [];
@@ -212,6 +215,7 @@ class FacturaController extends Controller
                 $precio = $item["precio"]??0;
                 $descuento = $item["descuento"]??0;
                 $cantidad = $item["cantidad"]??0;
+                $is_unit = $item["is_unit"]??0;
                 $is_barquillo = $item["is_barquillo"]??0;
                 $is_box = $item["is_box"]??0;
 
@@ -231,7 +235,7 @@ class FacturaController extends Controller
 
                 array_push($detalle, $factura_detalle);
 
-                array_push($array_salida, [
+                array_push(${$is_barquillo ? "array_stock_barquillos" : "array_stock_helados"}, [
                     "codigo" => $codigo,
                     "cantidad" => $cantidad,
                     "is_box" => $is_box
@@ -249,7 +253,13 @@ class FacturaController extends Controller
         $numero_documento = $serie."-".$correlativo;
 
         if(empty($from_id)){
-            $this->stock->createMovimientoStock($stock_movimiento_tipo, $stock_estado, $stock_id, $heladero_id, $array_salida, $stock_movimiento, $numero_documento);
+            if(!empty($array_stock_helados)){
+                $this->stock->createMovimientoStock($stock_movimiento_tipo, $stock_estado, $stock_id, $heladero_id, $array_stock_helados, $stock_movimiento, $numero_documento);
+            }
+    
+            if(!empty($array_stock_barquillos)){
+                $this->stockBarquillos->createMovimientoStock($stock_movimiento_tipo, $stock_estado, $stock_id, $heladero_id, $array_stock_barquillos, $stock_movimiento, $numero_documento);
+            }
         }
 
         $response = $this->getFacturaQuery($factura->id);
@@ -271,38 +281,6 @@ class FacturaController extends Controller
         }else{
             return $this->response->success($response, "El registro fue encontrado");
         }
-
-        /*
-        $nota_heladero = Factura::find($id);
-
-        if($nota_heladero)
-        {
-            $detalle = FacturaDetalle::query()                                
-                                ->leftJoin('productos',  'productos.codigo', '=', 'factura_detalle.codigo')
-                                ->select(
-                                    "factura_detalle.id",
-                                    "factura_detalle.codigo",
-                                    "factura_detalle.precio",
-                                    "factura_detalle.descuento",
-                                    "factura_detalle.cantidad",
-                                    "factura_detalle.facturas_id",
-                                    "factura_detalle.created_at",
-                                    "factura_detalle.updated_at",
-                                    
-                                    "productos.nombre as producto"
-                                )
-                                ->where('factura_detalle.facturas_id', $id)
-                                ->orderBy('factura_detalle.created_at','desc')
-                                ->get();
-            
-            $nota_heladero["detalle"] = $detalle;
-
-            return $this->response->success($nota_heladero, "El registro fue encontrado");
-        }
-        else{
-            return $this->response->error("El registro no fue encontrado");
-        }
-        */
     }
 
     /**
@@ -372,8 +350,12 @@ class FacturaController extends Controller
 
         $detalle = [];
 
-        $array_salida = [];
-        $array_ingreso = [];
+        $array_salida_helado = [];
+        $array_ingreso_helado = [];
+
+        $array_salida_barquillo = [];
+        $array_ingreso_barquillo = [];
+
         $array_detalle_stock_barquillo = [];
         
         $factura_actuales = FacturaDetalle::query()
@@ -397,7 +379,11 @@ class FacturaController extends Controller
                     if($rid == $lid && $lid!='' && $rid !=''){                        
                         /* eliminar elemento de la lista de stock de barquillos y stockhelados */
                         if(empty($from_id)){
-                            $this->stock->eliminarStockByCodigo($codigo_documento, $codigo);
+                            if($is_barquillo){
+                                $this->stockBarquillos->eliminarStockByCodigo($codigo_documento, $codigo);
+                            }else{
+                                $this->stock->eliminarStockByCodigo($codigo_documento, $codigo);
+                            }
                         }
                         /* eliminar elemento de la lista de stock de barquillos y stockhelados */
                         unset($factura_actuales[$lkey]);
@@ -418,7 +404,9 @@ class FacturaController extends Controller
                         $_codigo = $factura_detalle_find->codigo;
                         $_cantidad = $factura_detalle_find->cantidad;
 
-                        array_push($array_salida, [
+                        $_is_barquillo = Productos::where("codigo", $_codigo)->value("is_barquillo");
+
+                        array_push(${$_is_barquillo ? "array_salida_barquillo" : "array_salida_helado"}, [
                             "codigo" => $_codigo,
                             "cantidad" => $_cantidad
                         ]);
@@ -455,7 +443,7 @@ class FacturaController extends Controller
                     $factura_detalle->cantidad = $cantidad;
                     $factura_detalle->is_box = $is_box;
 
-                    array_push($array_ingreso, [
+                    array_push(${$is_barquillo ? "array_ingreso_barquillo" : "array_ingreso_helado"}, [
                         "codigo" => $codigo,
                         "cantidad" => $cantidad,
                         "is_box" => $is_box
@@ -481,7 +469,7 @@ class FacturaController extends Controller
                     $factura_detalle->is_box = $is_box;
                     $factura_detalle->facturas_id = $factura->id;
 
-                    array_push($array_ingreso, [
+                    array_push(${$is_barquillo ? "array_ingreso_barquillo" : "array_ingreso_helado"}, [
                         "codigo" => $codigo,
                         "cantidad" => $cantidad,
                         "is_box" => $is_box
@@ -512,7 +500,8 @@ class FacturaController extends Controller
         */
     
         if(empty($from_id)){
-            $this->stock->updateMovimientoStockFactura($array_salida, $array_ingreso, $numero_documento);
+            $this->stock->updateMovimientoStockFactura($array_salida_helado, $array_ingreso_helado, $numero_documento);
+            $this->stockBarquillos->updateMovimientoStockFactura($array_salida_barquillo, $array_ingreso_barquillo, $numero_documento);
         }        
 
         $response = $this->getFacturaQuery($factura->id);
@@ -542,6 +531,7 @@ class FacturaController extends Controller
         }
 
         $this->stock->eliminarStockByNumeroDocumento($factura->serie."-".$factura->correlativo);
+        $this->stockBarquillos->eliminarStockByNumeroDocumento($factura->serie."-".$factura->correlativo);
         
         $factura->delete();
 
