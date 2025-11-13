@@ -35,7 +35,6 @@ class LoginController extends Controller
         $token = $user->createToken('authToken')->plainTextToken;
     
         return response([
-            'true' => true,
             'token' => $token,
             'name'=> $user->name,
             'surname'=> $user->apellidos,
