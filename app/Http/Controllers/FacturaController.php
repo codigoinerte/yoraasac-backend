@@ -226,7 +226,7 @@ class FacturaController extends Controller
                 $factura_detalle->descuento = $descuento;
                 $factura_detalle->cantidad = $cantidad;
                 $factura_detalle->facturas_id = $factura->id;
-                $factura_detalle->is_box = $is_box;
+                $factura_detalle->is_box = $is_box;                
                 $factura_detalle->save();
 
                 unset($factura_detalle->facturas_id);
@@ -235,9 +235,11 @@ class FacturaController extends Controller
 
                 array_push($detalle, $factura_detalle);
 
+                $cantidad_caja = Productos::where("codigo", $codigo)->value("cantidad_caja") ?? 1;
+                $final_cantidad = $is_box ? ($cantidad_caja * $cantidad) : $cantidad;
                 array_push(${$is_barquillo ? "array_stock_barquillos" : "array_stock_helados"}, [
                     "codigo" => $codigo,
-                    "cantidad" => $cantidad,
+                    "cantidad" => $final_cantidad,
                     "is_box" => $is_box
                 ]);
             }
@@ -404,11 +406,17 @@ class FacturaController extends Controller
                         $_codigo = $factura_detalle_find->codigo;
                         $_cantidad = $factura_detalle_find->cantidad;
 
-                        $_is_barquillo = Productos::where("codigo", $_codigo)->value("is_barquillo");
+                        $producto_info = Productos::where("codigo", $_codigo)->first();
+                        
+                        $_is_barquillo = $producto_info->is_barquillo;
+                        $_is_box = $producto_info->is_box;
+                        $cantidad_caja = $producto_info->cantidad_caja ?? 1;
+
+                        $final_cantidad = $_is_box ? ($cantidad_caja * $_cantidad) : $_cantidad;
 
                         array_push(${$_is_barquillo ? "array_salida_barquillo" : "array_salida_helado"}, [
                             "codigo" => $_codigo,
-                            "cantidad" => $_cantidad
+                            "cantidad" => $final_cantidad
                         ]);
 
                         unset($_codigo);
@@ -443,9 +451,11 @@ class FacturaController extends Controller
                     $factura_detalle->cantidad = $cantidad;
                     $factura_detalle->is_box = $is_box;
 
+                    $cantidad_caja = Productos::where("codigo", $codigo)->value("cantidad_caja") ?? 1;
+                    $final_cantidad = $is_box ? ($cantidad_caja * $cantidad) : $cantidad;
                     array_push(${$is_barquillo ? "array_ingreso_barquillo" : "array_ingreso_helado"}, [
                         "codigo" => $codigo,
-                        "cantidad" => $cantidad,
+                        "cantidad" => $final_cantidad,
                         "is_box" => $is_box
                     ]);
                     
@@ -469,9 +479,11 @@ class FacturaController extends Controller
                     $factura_detalle->is_box = $is_box;
                     $factura_detalle->facturas_id = $factura->id;
 
+                    $cantidad_caja = Productos::where("codigo", $codigo)->value("cantidad_caja") ?? 1;
+                    $final_cantidad = $is_box ? ($cantidad_caja * $cantidad) : $cantidad;
                     array_push(${$is_barquillo ? "array_ingreso_barquillo" : "array_ingreso_helado"}, [
                         "codigo" => $codigo,
-                        "cantidad" => $cantidad,
+                        "cantidad" => $final_cantidad,
                         "is_box" => $is_box
                     ]);
 

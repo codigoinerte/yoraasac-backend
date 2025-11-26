@@ -465,6 +465,8 @@ class StockHeladosController extends Controller
 
                 $newDetail->codigo = $codigo;
                 $newDetail->stock_helados_id = $idStock;
+                $newDetail->cantidad = $cantidad;
+                /* TODO: verificar si en futuro se necesita guardar la cantidad en cajas, dado que la cantidad por caja se realiza un nivel arriba
                 if($is_box == true){
                     $productDetail = Productos::where("codigo", $codigo)->first();
                     $cantidad_caja = $productDetail->cantidad_caja ?? 0;
@@ -478,6 +480,7 @@ class StockHeladosController extends Controller
                 }else{
                     $newDetail->cantidad = $cantidad;
                 }
+                */
                 
 
                 $newDetail->save();
@@ -542,6 +545,7 @@ class StockHeladosController extends Controller
             $newDetail->codigo = $codigo;
             $newDetail->stock_helados_id = $id;
             
+            /*
             if($is_box == true){
                 $productDetail = Productos::where("codigo", $codigo)->first();
                 $cantidad_caja = $productDetail->cantidad_caja ?? 0;
@@ -553,8 +557,8 @@ class StockHeladosController extends Controller
                 $newDetail->cantidad = $cantidad_unidad;
 
             }else{
-                $newDetail->cantidad = $cantidad;
-            }
+            }*/
+            $newDetail->cantidad = $cantidad;
             
             $newDetail->save();
         }
